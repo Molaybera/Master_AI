@@ -2,5 +2,4 @@ install any model from ollama i used qwen2.5-coder.
 create a file without any extention name followed by "Modelfile" write your instruction for your model.
 init npm.
 install all the pacakge "npm install nodemon express mongoose bcryptjs express-session connect-mongo dotenv ollama".
-
-
+set the Initial server 
