@@ -1,66 +1,68 @@
 /**
  * verifyOtpController.js
- * Purpose: Handles the second stage of authentication.
- * It compares the user-provided OTP with the one stored in the database.
- * If valid and not expired, it creates a session and clears the OTP.
+ * Purpose: Handles OTP verification using Email.
+ * This file verifies the 6-digit code sent to the user's email.
+ * If successful, it establishes the user session.
  */
 
 const User = require('../../models/User');
 
 const verifyOtp = async (req, res) => {
     try {
-        const { username, otpCode } = req.body;
+        const { email, otpCode } = req.body;
 
         // 1. Validate Input
-        if (!username || !otpCode) {
+        if (!email || !otpCode) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Username and OTP code are required." 
+                message: "Email and OTP code are required." 
             });
         }
 
-        // 2. Find User
-        const user = await User.findOne({ username });
-        if (!user || !user.otp) {
+        // 2. Find User by Email
+        const user = await User.findOne({ email });
+        
+        // 3. Check if user exists and has an active OTP
+        if (!user || !user.otp || !user.otp.code) {
             return res.status(400).json({ 
                 success: false, 
-                message: "No active OTP found for this user." 
+                message: "No active OTP found. Please try logging in again." 
             });
         }
 
-        // 3. Check if OTP is expired
+        // 4. Check if OTP is expired
         if (new Date() > user.otp.expiresAt) {
-            user.otp = undefined; // Clear expired OTP
+            // Clear expired OTP
+            user.otp = undefined;
             await user.save();
             return res.status(400).json({ 
                 success: false, 
-                message: "OTP has expired. Please login again." 
+                message: "OTP has expired. Please login again to get a new code." 
             });
         }
 
-        // 4. Verify OTP Code
+        // 5. Verify the Code
         if (user.otp.code !== otpCode) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Invalid OTP code." 
+                message: "Invalid verification code." 
             });
         }
 
-        // 5. Authentication Successful - Clear OTP and update verification status
+        // 6. Success Logic
+        // Clear the OTP from DB once used
         user.otp = undefined;
-        user.isVerified = true;
+        user.isVerified = true; 
         await user.save();
 
-        // 6. Establish Session
-        // Note: req.session will be available after we configure express-session in server.js
+        // 7. Establish the Session (Logged In state)
         req.session.userId = user._id;
         req.session.username = user.username;
 
         res.status(200).json({ 
             success: true, 
-            message: "Authentication successful. Welcome back!",
+            message: "Authentication successful! Session established.",
             user: {
-                id: user._id,
                 username: user.username,
                 email: user.email
             }
@@ -70,7 +72,7 @@ const verifyOtp = async (req, res) => {
         console.error(`[OTP VERIFICATION ERROR]: ${error.message}`);
         res.status(500).json({ 
             success: false, 
-            message: "Server error during OTP verification." 
+            message: "Server error during verification." 
         });
     }
 };

@@ -1,18 +1,17 @@
 /**
  * sendEmail.js
  * Purpose: A utility function to send emails using Nodemailer.
- * It is configured to use Gmail's SMTP server with an App Password.
- * This will be used to send OTP codes to users during the login phase.
+ * Updated: Supports HTML templates for the "MASTER OS" project aesthetic.
  */
 
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
     // 1. Create a transporter using Google's SMTP settings
+    // Ensure EMAIL_USER and EMAIL_APP_PASSWORD are set in your .env file
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            // These should be defined in your .env file
             user: process.env.EMAIL_USER, 
             pass: process.env.EMAIL_APP_PASSWORD 
         }
@@ -20,20 +19,21 @@ const sendEmail = async (options) => {
 
     // 2. Define the email options
     const mailOptions = {
-        from: `"Cyber Assistant" <${process.env.EMAIL_USER}>`,
+        // Sets the sender name to "MASTER OS"
+        from: `"MASTER OS" <${process.env.EMAIL_USER}>`,
         to: options.email,
         subject: options.subject,
-        text: options.message,
-        // You can also add html: options.html if you want a styled email later
+        text: options.message, // Fallback plain text
+        html: options.html    // THIS LINE is what enables your Cyber Lab design
     };
 
-    // 3. Actually send the email
+    // 3. Dispatch the email
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL] Sent successfully to ${options.email}`);
+        console.log(`[SYSTEM] Cyber-MFA relay successful to ${options.email}`);
     } catch (error) {
         console.error(`[EMAIL ERROR]: ${error.message}`);
-        throw new Error('Email could not be sent');
+        throw new Error('Email relay failed. Please verify your .env credentials and Gmail App Password.');
     }
 };
 

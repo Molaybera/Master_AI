@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASTER | Personal Cyber Security Tutor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div class="scan-line"></div>
+    
+    <!-- Binary Stream Elements -->
+    <div id="binary-container"></div>
+
+    <!-- Terminal Boot -->
+    <div id="boot-overlay">
+        <div id="boot-log" class="max-w-2xl mx-auto w-full"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <nav class="fixed top-0 w-full z-50 p-6 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 border border-blue-500/50 flex items-center justify-center relative group overflow-hidden">
+                <div class="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
+                <i class="fas fa-user-ninja text-blue-400 text-sm group-hover:scale-125 transition-transform"></i>
+            </div>
+            <div class="flex flex-col">
+                <span class="mono text-sm font-bold tracking-[0.3em] text-white">MASTER//SEC_KERNEL</span>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span class="pulse-dot"></span>
+                    <span class="mono text-[8px] text-emerald-500 uppercase tracking-widest">NODE_CONNECTED::127.0.0.1</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-4 md:gap-10 items-center">
+            <div class="hidden lg:flex gap-8 items-center">
+                <div class="flex flex-col items-end">
+                    <span class="mono text-[9px] text-blue-400 uppercase tracking-widest">UPLINK_STABLE</span>
+                    <span class="mono text-[9px] text-slate-500" id="live-time">00:00:00</span>
+                </div>
+                <div class="h-8 w-[1px] bg-white/10"></div>
+                <span class="mono text-[10px] text-emerald-500 flex items-center gap-2">
+                    <i class="fas fa-microchip"></i> QWEN_2.5_CODER
+                </span>
+            </div>
+            <a href="/login.html" id="authLink" class="px-5 py-2 bg-blue-600/10 border border-blue-500/40 text-blue-400 mono text-[9px] uppercase tracking-[0.3em] hover:bg-blue-600 transition-all hover:text-white rounded-sm shadow-[0_0_15px_rgba(14,165,233,0.1)]">
+                Access_Interface
+            </a>
+        </div>
+    </nav>
+
+    <!-- Decorative SVGs (Corners) -->
+    <svg class="circuit-bg top-0 left-0 w-64 h-64" viewBox="0 0 100 100">
+        <path d="M0,20 L20,20 L30,30 L60,30 L70,40" fill="none" stroke="var(--neon-blue)" stroke-width="0.5" />
+        <circle cx="70" cy="40" r="1" fill="var(--neon-blue)" />
+    </svg>
+
+    <!-- Main Content -->
+    <main class="min-h-screen flex flex-col items-center justify-center px-6 text-center">
+        <div class="relative z-10 w-full max-w-6xl">
+            <div class="mono text-[10px] text-blue-500 mb-6 tracking-[0.8em] uppercase opacity-60">
+                OFFLINE PERSONAL CYBER SECURITY TUTOR
+            </div>
+            
+            <h1 class="text-8xl md:text-[11rem] font-black italic tracking-tighter text-white mb-4 glitch" data-text="MASTER">
+                MASTER
+            </h1>
+
+            <div class="flex items-center justify-center gap-6 mb-12">
+                <div class="h-[1px] flex-1 max-w-[100px] bg-blue-500/30"></div>
+                <p class="mono text-[11px] text-slate-400 uppercase tracking-[0.3em]">Security Tutoring & Simplified Coding</p>
+                <div class="h-[1px] flex-1 max-w-[100px] bg-blue-500/30"></div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
+                <a href="/chat.html" class="group relative px-14 py-6 overflow-hidden rounded-sm w-full md:w-auto">
+                    <div class="absolute inset-0 bg-blue-600 transition-transform -translate-x-full group-hover:translate-x-0 duration-300"></div>
+                    <div class="absolute inset-0 border border-blue-500/60"></div>
+                    <span class="relative z-10 text-white font-bold mono uppercase tracking-widest text-sm flex items-center justify-center gap-3">
+                        <i class="fas fa-shield-halved text-xs animate-pulse"></i> Initialize_Lab
+                    </span>
+                </a>
+                
+                <div class="grid grid-cols-2 gap-4 w-full md:w-auto">
+                    <div class="cyber-card p-4 min-w-[140px]">
+                        <span class="mono text-[8px] text-slate-500 uppercase mb-1">NETWORK_TRAFFIC</span>
+                        <div class="flex items-end gap-1">
+                            <div class="w-1 h-3 bg-blue-500/40"></div>
+                            <div class="w-1 h-5 bg-blue-500/60 animate-bounce"></div>
+                            <div class="w-1 h-2 bg-blue-500/40"></div>
+                            <div class="w-1 h-6 bg-blue-500 animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card p-4 min-w-[140px]">
+                        <span class="mono text-[8px] text-slate-500 uppercase mb-1">SYS_INTEGRITY</span>
+                        <span class="mono text-emerald-400 text-xs">99.8%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="max-w-7xl mx-auto px-6 py-24 relative">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Feature 1 -->
+            <div class="cyber-card p-8 group">
+                <div class="cyber-border-accent top-left"></div>
+                <div class="cyber-border-accent bottom-right"></div>
+                <div class="text-blue-500 text-4xl mb-6 transition-transform group-hover:scale-110">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h4 class="mono text-xs font-bold text-white uppercase mb-4 tracking-tighter">Cyber_Tutor</h4>
+                <p class="text-[11px] text-slate-500 leading-relaxed mono">Specialized mentoring focused on defensive security, auditing, and hardening protocols.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="cyber-card p-8 group">
+                <div class="cyber-border-accent top-left"></div>
+                <div class="cyber-border-accent bottom-right"></div>
+                <div class="text-blue-500 text-4xl mb-6 transition-transform group-hover:scale-110">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h4 class="mono text-xs font-bold text-white uppercase mb-4 tracking-tighter">Simple_Coding</h4>
+                <p class="text-[11px] text-slate-500 leading-relaxed mono">Simplified coding assistance designed for rapid tool creation and security scripting.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="cyber-card p-8 group">
+                <div class="cyber-border-accent top-left"></div>
+                <div class="cyber-border-accent bottom-right"></div>
+                <div class="text-blue-500 text-4xl mb-6 transition-transform group-hover:scale-110">
+                    <i class="fas fa-server"></i>
+                </div>
+                <h4 class="mono text-xs font-bold text-white uppercase mb-4 tracking-tighter">Offline_Core</h4>
+                <p class="text-[11px] text-slate-500 leading-relaxed mono">No Third-Party APIs. Runs entirely on your local hardware for 100% privacy.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="cyber-card p-8 group">
+                <div class="cyber-border-accent top-left"></div>
+                <div class="cyber-border-accent bottom-right"></div>
+                <div class="text-blue-500 text-4xl mb-6 transition-transform group-hover:scale-110">
+                    <i class="fas fa-mask"></i>
+                </div>
+                <h4 class="mono text-xs font-bold text-white uppercase mb-4 tracking-tighter">Sec_Specialist</h4>
+                <p class="text-[11px] text-slate-500 leading-relaxed mono">Optimized for identifying vulnerabilities and tutoring on penetration testing theory.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Stats -->
+    <footer class="p-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center opacity-60">
+        <div class="mono text-[9px] uppercase tracking-widest mb-4 md:mb-0">
+            Node_Identifier::MASTER_SRV_LOCAL // <span id="node-id" class="text-blue-400"></span>
+        </div>
+        <div class="mono text-[9px] uppercase tracking-[0.2em] flex items-center gap-4">
+            <span class="text-emerald-500"><i class="fas fa-satellite-dish mr-1"></i> UPLINK_READY</span>
+            <span>&copy; 2026 // MASTER_TUTOR_CORE</span>
+        </div>
+    </footer>
+
+    <script src="./js/script.js" defer></script>
+</body>
+</html>

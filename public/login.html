@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL ACCESS | MASTER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/login.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+</head>
+<body class="p-6">
+    <div id="canvas-container"></div>
+    <div class="scanlines"></div>
+    <div id="binary-container"></div>
+
+    <!-- Terminal Boot Overlay (Triggered on Success) -->
+    <div id="boot-overlay">
+        <div id="boot-log" class="max-w-2xl mx-auto w-full"></div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <!-- Decorative SVGs -->
+    <svg class="circuit-bg top-0 left-0 w-64 h-64" viewBox="0 0 100 100">
+        <path d="M0,20 L20,20 L30,30 L60,30 L70,40" fill="none" stroke="var(--neon-blue)" stroke-width="0.5" />
+        <circle cx="70" cy="40" r="1" fill="var(--neon-blue)" />
+    </svg>
+
+    <div class="max-w-md w-full cyber-panel p-10 relative">
+        <div class="cyber-corner corner-tl"></div>
+        <div class="cyber-corner corner-br"></div>
+
+        <div class="mb-10 text-center">
+            <h1 class="text-4xl font-black text-white italic tracking-tighter uppercase">Master_Login</h1>
+            <div class="h-1 w-24 bg-blue-500 mx-auto mt-2 rounded-full opacity-50"></div>
+        </div>
+
+        <!-- STEP 1: Login -->
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 mb-2 block">Identity (Email)</label>
+                <input type="email" id="email" required class="input-cyber w-full py-3 px-4 text-white rounded-sm" placeholder="USER@NETWORK.LOCAL">
+            </div>
+
+            <div>
+                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 mb-2 block">Encryption (Password)</label>
+                <div class="relative">
+                    <input type="password" id="password" required class="input-cyber w-full py-3 pl-4 pr-12 text-white rounded-sm" placeholder="••••••••••••">
+                    <button type="button" id="togglePass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm mt-4">
+                Initialize Login
+            </button>
+        </form>
+
+        <!-- STEP 2: OTP -->
+        <form id="otpForm" class="hidden space-y-6">
+            <div class="text-center">
+                <i class="fas fa-clock text-blue-400 text-3xl mb-3"></i>
+                <p class="mono text-[11px] text-slate-400 uppercase tracking-widest">MFA Verification Required</p>
+                <div id="timerContainer" class="mt-2 mono text-xl font-bold text-blue-400">01:00</div>
+            </div>
+            <input type="text" id="otpCode" maxlength="6" required class="input-cyber w-full py-4 text-white text-center text-4xl tracking-[0.5em] mono rounded-sm" placeholder="000000">
+            <button type="submit" id="verifyBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm bg-gradient-to-r from-emerald-700 to-emerald-500">Execute Verification</button>
+            <button type="button" onclick="location.reload()" class="w-full mono text-[10px] text-slate-500 hover:text-blue-400 transition-colors uppercase tracking-widest">[ Abort Mission ]</button>
+        </form>
+
+        <div class="mt-10 pt-6 border-t border-white/5 flex justify-between items-center">
+            <span class="text-[10px] text-slate-600 uppercase tracking-widest">No entry?</span>
+            <a href="/register" class="mono text-[10px] text-blue-400 hover:text-white transition-all uppercase tracking-widest">Create_Identity_</a>
+        </div>
+    </div>
+
+    <script src="./js/login.js" defer></script>
+</body>
+</html>

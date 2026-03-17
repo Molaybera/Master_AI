@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CREATE IDENTITY | MASTER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/register.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="p-6">
+    <div id="canvas-container"></div>
+    <div class="scanlines"></div>
+
+    <!-- Terminal Boot Overlay -->
+    <div id="boot-overlay">
+        <div id="boot-log" class="max-w-2xl mx-auto w-full"></div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <div class="max-w-md w-full cyber-panel p-10 relative">
+        <div class="cyber-corner corner-tl"></div>
+        <div class="cyber-corner corner-br"></div>
+
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-black text-white italic tracking-tighter uppercase">Create_ID</h1>
+            <p class="mono text-[10px] text-blue-400 mt-2 tracking-widest uppercase">Identity Initialization Protocol</p>
+        </div>
+
+        <form id="registerForm" class="space-y-5">
+            <div>
+                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 mb-2 block">Username</label>
+                <input type="text" id="username" required minlength="3"
+                    class="input-cyber w-full py-3 px-4 text-white placeholder-slate-600 rounded-sm"
+                    placeholder="GHOST_PROTOCOL">
+            </div>
+
+            <div>
+                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 mb-2 block">Email_Address</label>
+                <input type="email" id="email" required
+                    class="input-cyber w-full py-3 px-4 text-white placeholder-slate-600 rounded-sm"
+                    placeholder="OPERATOR@SECURE.NET">
+            </div>
+
+            <div class="space-y-3">
+                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 block">Encryption_Code</label>
+                
+                <div class="relative">
+                    <input type="password" id="password" required minlength="8"
+                        class="input-cyber w-full py-3 pl-4 pr-12 text-white placeholder-slate-600 rounded-sm"
+                        placeholder="••••••••••••">
+                    <button type="button" id="togglePass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+
+                <!-- Strength Status Bar -->
+                <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                    <div id="strengthBar" class="strength-bar bg-red-500"></div>
+                </div>
+
+                <!-- Condition Checklist -->
+                <ul class="mono text-[9px] text-slate-500 space-y-1.5 ml-1 uppercase tracking-tight">
+                    <li id="cond-length" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> 8+ Characters</li>
+                    <li id="cond-upper" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> Upper & Lower Case</li>
+                    <li id="cond-num" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> Numeric Digit</li>
+                    <li id="cond-spec" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> Special Symbol (!@#$)</li>
+                </ul>
+
+                <!-- Large Generate Button -->
+                <button type="button" id="genPass" class="w-full py-3 bg-white/5 border border-emerald-500/30 text-emerald-400 mono text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-2">
+                    <i class="fas fa-key text-[9px]"></i> Generate_Password
+                </button>
+            </div>
+
+            <button type="submit" id="registerBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm mt-6">
+                Execute Register
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+            <span class="text-[10px] text-slate-600 uppercase tracking-widest">Active ID?</span>
+            <a href="/login" class="mono text-[10px] text-blue-400 hover:text-white transition-all uppercase tracking-widest">
+                [login]_Return_To_Base
+            </a>
+        </div>
+    </div>
+
+    <script src="./js/register.js" defer></script>
+</body>
+</html>

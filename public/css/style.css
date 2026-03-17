@@ -1,0 +1,151 @@
+        :root {
+            --neon-blue: #0ea5e9;
+            --cyber-dark: #020617;
+            --glitch-red: #ff0000;
+            --glitch-blue: #00ffff;
+            --terminal-green: #10b981;
+        }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+            background-color: var(--cyber-dark);
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Three.js Background Layer */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Stable Glitch Effect */
+        .glitch {
+            position: relative;
+            display: inline-block;
+            line-height: 1;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--cyber-dark);
+            visibility: hidden;
+        }
+        .glitch:hover::before {
+            visibility: visible;
+            left: 2px;
+            text-shadow: -2px 0 var(--glitch-red);
+            clip: rect(44px, 900px, 56px, 0);
+            animation: glitch-anim 2s infinite linear alternate-reverse;
+        }
+        .glitch:hover::after {
+            visibility: visible;
+            left: -2px;
+            text-shadow: -2px 0 var(--glitch-blue);
+            clip: rect(44px, 900px, 56px, 0);
+            animation: glitch-anim2 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim { 0% { clip: rect(31px, 9999px, 94px, 0); } 100% { clip: rect(67px, 9999px, 80px, 0); } }
+        @keyframes glitch-anim2 { 0% { clip: rect(10px, 9999px, 20px, 0); } 100% { clip: rect(20px, 9999px, 40px, 0); } }
+
+        /* Terminal Boot Overlay */
+        #boot-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            padding: 2rem;
+            color: var(--neon-blue);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+        }
+
+        /* Interactive Cyber Cards */
+        .cyber-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .cyber-card:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 30px rgba(14, 165, 233, 0.2);
+            transform: translateY(-10px);
+        }
+
+        .cyber-border-accent {
+            position: absolute;
+            width: 12px; height: 12px;
+            border: 2px solid var(--neon-blue);
+            opacity: 0.6;
+        }
+        .top-left { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+        .bottom-right { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+
+        /* Floating Binary Streams */
+        .binary-stream {
+            position: fixed;
+            color: var(--neon-blue);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            opacity: 0.1;
+            pointer-events: none;
+            white-space: nowrap;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            from { transform: translateY(-100vh); }
+            to { transform: translateY(100vh); }
+        }
+
+        .scan-line {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(14, 165, 233, 0.1);
+            box-shadow: 0 0 15px var(--neon-blue);
+            animation: scan 10s linear infinite;
+            z-index: 99;
+            pointer-events: none;
+        }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+
+        /* Node Status Pulse */
+        .pulse-dot {
+            width: 8px; height: 8px;
+            background: var(--terminal-green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--terminal-green);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* Decorative Circuit SVG */
+        .circuit-bg {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.05;
+            pointer-events: none;
+        }
