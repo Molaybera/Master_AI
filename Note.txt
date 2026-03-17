@@ -3,3 +3,6 @@ create a file without any extention name followed by "Modelfile" write your inst
 init npm.
 install all the pacakge "npm install nodemon express mongoose bcryptjs express-session connect-mongo dotenv ollama".
 set the Initial server 
+created the user and chat model
+created register and login controller with otp verfication.
+connected to server.js and make sure to crete a session for 24 hours.

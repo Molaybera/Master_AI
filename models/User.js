@@ -1,8 +1,8 @@
 /**
  * User.js
- * Purpose: Defines the Mongoose Schema and Model for users.
- * This file acts as the blueprint for the 'users' collection in MongoDB,
- * ensuring that every user document follows a consistent structure.
+ * Purpose: Defines the Mongoose Schema for users with Email and OTP support.
+ * This blueprint now includes an email field for OTP delivery and 
+ * account verification status to ensure security.
  */
 
 const mongoose = require('mongoose');
@@ -15,19 +15,33 @@ const userSchema = new mongoose.Schema({
         trim: true,
         minlength: [3, 'Username must be at least 3 characters long']
     },
+    email: {
+        type: String,
+        required: [true, 'Email is required'],
+        unique: true,
+        lowercase: true,
+        trim: true,
+        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+    },
     password: {
         type: String,
         required: [true, 'Password is required'],
         minlength: [8, 'Password must be at least 8 characters long']
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        code: String,
+        expiresAt: Date
     },
     createdAt: {
         type: Date,
         default: Date.now
     }
 }, {
-    // Automatically manage 'createdAt' and 'updatedAt' fields
     timestamps: true
 });
 
-// Export the model so it can be used in our controllers
 module.exports = mongoose.model('User', userSchema);
