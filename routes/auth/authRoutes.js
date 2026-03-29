@@ -1,7 +1,6 @@
 /**
  * authRoutes.js
  * Purpose: Routes all authentication-related API calls to their respective controllers.
- * Updated: Added the /me (profile) route protected by authMiddleware to verify sessions.
  */
 
 const express = require('express');
@@ -9,13 +8,14 @@ const router = express.Router();
 
 // Importing middleware
 const { protect } = require('../../middleware/authMiddleware');
+const getProfile = require('../../controllers/auth/profileController');
 
 // Importing granular controllers
 const register = require('../../controllers/auth/registerController');
 const login = require('../../controllers/auth/loginController');
 const verifyOtp = require('../../controllers/auth/verifyOtpController');
 const logout = require('../../controllers/auth/logoutController');
-const getProfile = require('../../controllers/auth/profileController');
+
 
 /**
  * @route   POST /api/auth/register
@@ -35,16 +35,18 @@ router.post('/login', login);
  */
 router.post('/verify-otp', verifyOtp);
 
-/**
- * @route   GET /api/auth/me
- * @desc    Get current user profile (Requires Session)
- */
-router.get('/me', protect, getProfile);
 
 /**
  * @route   POST /api/auth/logout
  * @desc    Destroy session and logout user
  */
 router.post('/logout', logout);
+
+
+/**
+ * @route   GET /api/auth/me
+ * @desc    Get current user profile (Frontend session check)
+ */
+router.get('/me', protect, getProfile);
 
 module.exports = router;

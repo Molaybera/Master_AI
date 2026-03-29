@@ -3,16 +3,22 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "concurrently --names \"SERVER,VOICE\" --prefix-colors \"cyan,magenta\" \"nodemon server.js\" \"python services/speachToText.py\"",
+    "start:server": "nodemon server.js",
+    "start:voice": "python services/speachToText.py",
+    "install:voice": "pip install speechrecognition websockets pyaudio"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
+    "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
+    "concurrently": "^9.2.1",
     "connect-mongo": "^6.0.0",
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",

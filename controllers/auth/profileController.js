@@ -1,37 +1,35 @@
 /**
  * profileController.js
- * Purpose: Handles fetching the currently logged-in user's data.
- * This relies on the session middleware to provide the userId.
+ * Purpose: Returns the currently logged-in user's data to the frontend.
  */
 
 const User = require('../../models/User');
 
 const getProfile = async (req, res) => {
     try {
-        // 1. Get the User ID from the session (set during verify-otp)
-        const userId = req.session.userId;
-
-        // 2. Fetch user data from DB (excluding password)
-        const user = await User.findById(userId).select('-password');
-
-        if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "User not found." 
-            });
+        // Ensure userId exists in session
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "No active session." });
         }
 
-        // 3. Return user details
+        // Find user by ID and exclude sensitive data
+        const user = await User.findById(req.session.userId).select('-password -otp');
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
         res.status(200).json({
             success: true,
-            user
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
         });
     } catch (error) {
         console.error(`[PROFILE ERROR]: ${error.message}`);
-        res.status(500).json({ 
-            success: false, 
-            message: "Server error fetching profile." 
-        });
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
 };
 

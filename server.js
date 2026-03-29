@@ -1,8 +1,8 @@
 /**
  * server.js
+ * Path: /server.js
  * Purpose: The main entry point of the MASTER application.
- * This file initializes database connections, session management, 
- * and maps all API and view routes.
+ * Updated: Moved session middleware before static files to ensure cookie stability.
  */
 
 require('dotenv').config();
@@ -15,6 +15,7 @@ const path = require('path');
 // Import Routes
 const authRoutes = require('./routes/auth/authRoutes');
 const viewRoutes = require('./routes/views/viewRoutes');
+const chatRoutes = require('./routes/chat/chatRoutes');
 
 const app = express();
 
@@ -25,12 +26,7 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. Static Files
-// We serve assets from public, but HTML pages are managed by viewRoutes for protection
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 4. Session Configuration
-// This is critical for the 'protect' middleware to work correctly
+// 3. Session Configuration (IMPORTANT: Must come before static files)
 const MongoStore = connectMongo.default ? connectMongo.default : connectMongo;
 
 app.use(session({
@@ -50,14 +46,15 @@ app.use(session({
     }
 }));
 
-// 5. Use Routes
-// API Routes
-app.use('/api/auth', authRoutes);
+// 4. Static Files (Moved after session to ensure cookie visibility)
+app.use(express.static(path.join(__dirname, 'public')));
 
-// 6. View Routes
+// 5. Use Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/', viewRoutes);
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`[SERVER] MASTER OS initialized on http://localhost:${PORT}`);

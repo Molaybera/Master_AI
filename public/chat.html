@@ -3,91 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DASHBOARD | Cyber Assistant</title>
+    <title>MASTER_OS // NEURAL_LINK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./css/chat.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-    <div id="toastContainer"></div>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="p-6 border-b border-white/5">
-            <h1 class="text-xl font-black italic tracking-tighter text-white">CYBER_LAB</h1>
-            <p class="mono text-[10px] text-blue-400 uppercase mt-1">v2.4.0 Stable Build</p>
-        </div>
-
-        <div class="p-4">
-            <button class="w-full py-2 px-4 border border-blue-500/30 bg-blue-500/10 text-blue-400 mono text-xs uppercase tracking-widest hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2">
-                <i class="fas fa-plus"></i> New_Session
+<!-- ═══ SIDEBAR ═══════════════════════════════════════ -->
+<aside id="sidebar">
+    <div class="p-4 border-b border-white/5">
+        <!-- Home + New Chat row -->
+        <div class="flex gap-2 mb-3">
+            <a href="/index.html" title="Home"
+               class="w-10 h-10 rounded-xl bg-slate-800/60 border border-white/8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/60 hover:border-white/15 transition-all flex-shrink-0">
+                <i class="fas fa-house text-xs"></i>
+            </a>
+            <button id="new-chat-btn"
+                class="flex-1 py-2.5 px-4 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center gap-3 hover:bg-blue-600/20 transition-all group">
+                <i class="fas fa-plus text-blue-400 group-hover:rotate-90 transition-transform text-xs flex-shrink-0"></i>
+                <span class="mono text-[10px] font-bold tracking-[0.18em] uppercase text-blue-100">New Investigation</span>
             </button>
         </div>
+    </div>
 
-        <nav class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-            <div class="text-[10px] text-slate-500 uppercase mono px-2 mb-4">History_Logs</div>
-            <!-- Chat history placeholders -->
-            <div class="p-3 bg-white/5 border border-transparent hover:border-blue-500/30 cursor-pointer rounded-sm group transition-all">
-                <p class="text-xs text-slate-300 truncate">Network_Security_Audit.log</p>
-                <p class="text-[9px] text-slate-600 mono mt-1">2026-03-17 14:20</p>
-            </div>
-        </nav>
+    <div class="flex-1 overflow-y-auto py-3">
+        <p class="px-6 text-[9px] text-slate-600 uppercase tracking-widest mb-2 mono">Archives</p>
+        <div id="chat-history-list"></div>
+    </div>
 
-        <div class="p-4 border-t border-white/5 bg-black/20">
-            <div id="userInfo" class="flex items-center gap-3 mb-4">
-                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">U</div>
-                <div class="flex-1 overflow-hidden">
-                    <p id="userDisplayName" class="text-xs font-bold text-white truncate">LOADING...</p>
-                    <p class="text-[9px] text-blue-400 mono">STATUS::ACTIVE</p>
-                </div>
+    <!-- User footer -->
+    <div class="p-4 border-t border-white/5 flex items-center justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/15 flex-shrink-0">
+                <i class="fas fa-user-shield text-xs"></i>
             </div>
-            <button onclick="handleLogout()" class="w-full py-2 text-[10px] mono uppercase text-slate-500 hover:text-red-400 transition-colors flex items-center justify-center gap-2">
-                <i class="fas fa-power-off"></i> Terminate_Session
+            <div class="min-w-0">
+                <p class="text-[12px] font-bold text-white leading-none truncate" id="user-display">—</p>
+                <p class="text-[8px] text-emerald-500 mt-1 uppercase tracking-tighter mono">Secure_Uplink</p>
+            </div>
+        </div>
+        <button id="logout-btn" class="text-slate-600 hover:text-red-400 transition-colors p-2 flex-shrink-0" title="Logout">
+            <i class="fas fa-power-off text-xs"></i>
+        </button>
+    </div>
+</aside>
+
+<!-- ═══ MAIN ════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+
+    <!-- Nav -->
+    <nav class="h-13 px-5 flex items-center justify-between border-b border-white/5 bg-black/20 backdrop-blur-xl relative flex-shrink-0" style="height:52px">
+        <div class="flex items-center gap-4">
+            <button id="toggle-sidebar-btn" class="p-2 text-slate-500 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                <i class="fas fa-bars-staggered text-sm"></i>
             </button>
-        </div>
-    </aside>
-
-    <!-- Main Viewport -->
-    <main class="viewport">
-        <!-- Header -->
-        <header class="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-slate-900/40">
-            <div class="flex items-center gap-4">
-                <i class="fas fa-microchip text-blue-400"></i>
-                <span class="mono text-xs uppercase tracking-widest text-slate-300">Master_Interface</span>
-            </div>
-            <div class="flex items-center gap-6">
-                <span class="text-[10px] mono text-emerald-500"><i class="fas fa-circle text-[6px] mr-2 animate-pulse"></i> UPLINK_STABLE</span>
-                <button class="text-slate-500 hover:text-white transition-colors"><i class="fas fa-cog"></i></button>
-            </div>
-        </header>
-
-        <!-- Chat History -->
-        <div id="chatWindow" class="flex-1 overflow-y-auto p-8 flex flex-col gap-6 custom-scrollbar">
-            <!-- AI Welcome Message -->
-            <div class="message-ai max-w-[80%] p-4">
-                <p class="mono text-[10px] text-blue-400 mb-2">SYSTEM_MSG</p>
-                <p class="text-sm leading-relaxed text-slate-200">
-                    Welcome to the Cyber Assistant terminal. Session encryption is active. How can I assist with your operations today?
-                </p>
+            <div class="flex items-center gap-3">
+                <span class="mono text-[11px] text-blue-400 font-black tracking-[0.3em] uppercase">MASTER_AI</span>
+                <div class="h-3 w-px bg-white/10"></div>
+                <span class="mono text-[9px] text-slate-500 uppercase truncate max-w-[200px]" id="nav-title">STANDBY</span>
             </div>
         </div>
+        <div class="flex items-center gap-4">
+            <a href="/index.html"
+               class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/4 border border-white/8 text-slate-400 hover:text-white hover:bg-white/8 transition-all">
+                <i class="fas fa-house text-[10px]"></i>
+                <span class="mono text-[9px] uppercase tracking-wider">Home</span>
+            </a>
+            <div class="text-right hidden lg:block">
+                <p class="mono text-[8px] text-slate-700 uppercase tracking-wider">GPU</p>
+                <p class="mono text-[10px] text-emerald-500" id="gpu-stats">2%</p>
+            </div>
+        </div>
+        <div class="scan-line"></div>
+    </nav>
 
-        <!-- Input Area -->
-        <div class="input-area p-6">
-            <form id="chatForm" class="max-w-4xl mx-auto relative">
-                <input type="text" id="userInput" autocomplete="off"
-                    class="w-full bg-black/40 border border-white/10 rounded-sm py-4 pl-6 pr-16 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder-slate-600 mono"
-                    placeholder="ENTER_PROMPT_HERE...">
-                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-600 hover:bg-blue-500 text-white rounded-sm transition-all flex items-center justify-center">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
-            <p class="text-center text-[9px] text-slate-600 mt-3 mono uppercase tracking-[0.2em]">Your Data is secure to your self | Station_01</p>
+    <!-- Chat window -->
+    <main id="chat-window" class="flex-1 overflow-y-auto px-4 md:px-12 py-8 scroll-smooth">
+        <div id="msg-area" class="max-w-3xl mx-auto space-y-8">
+            <!-- empty state shown by default -->
+            <div id="empty-state" class="empty-state">
+                <div class="empty-icon"><i class="fas fa-terminal"></i></div>
+                <p class="mono text-[10px] text-blue-400 uppercase tracking-[0.5em]">> STANDBY_FOR_INPUT</p>
+                <p class="text-sm font-light text-slate-500 max-w-xs leading-relaxed">System ready for cyber security tutoring and secure scripting commands.</p>
+            </div>
         </div>
     </main>
+
+    <!-- Neural sync -->
+    <div id="neural-sync" class="hidden">
+        <div class="flex gap-1.5 items-end" style="height:18px">
+            <div class="w-1 bg-blue-500 rounded-full animate-bounce" style="height:60%;animation-delay:0s"></div>
+            <div class="w-1 bg-blue-500 rounded-full animate-bounce" style="height:100%;animation-delay:.14s"></div>
+            <div class="w-1 bg-blue-500 rounded-full animate-bounce" style="height:70%;animation-delay:.28s"></div>
+            <div class="w-1 bg-blue-500 rounded-full animate-bounce" style="height:45%;animation-delay:.42s"></div>
+        </div>
+        <span class="mono text-[10px] text-blue-400 font-bold tracking-[0.2em] uppercase">Processing Neural Weights...</span>
+    </div>
+
+    <!-- Input -->
+    <footer class="px-4 md:px-12 pb-5 pt-2 flex-shrink-0"
+            style="background:linear-gradient(to top, #020b18 60%, rgba(2,11,24,0.7) 100%)">
+        <div class="max-w-3xl mx-auto">
+            <div class="input-wrap">
+                <input type="text" id="user-input" autocomplete="off" maxlength="2000"
+                    placeholder="Ask MASTER about security threats or code..."
+                    aria-label="Chat input">
+                <span class="char-count" id="char-count">0</span>
+                <button class="mic-btn" id="mic-btn" title="Voice Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="send-btn" id="send-btn" title="Send (Enter)" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                    <span class="send-label hidden sm:inline">Send</span>
+                </button>
+            </div>
+            <p class="text-center mt-2.5 text-[10px] text-slate-700 uppercase tracking-widest mono">
+                Master AI · Cyber Security &amp; Programming Specialist · v3.4.0
+            </p>
+        </div>
+    </footer>
+</div>
+
+<!-- ═══ VOICE TOAST ══════════════════════════════════════ -->
+<div id="voice-toast">
+    <div class="vt-row">
+        <span class="vt-dot" id="vt-dot"></span>
+        <span id="voice-toast-text">Initializing...</span>
+        <div class="mic-wave" id="vt-wave" style="display:none">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+    <div class="vt-bar-wrap"><div class="vt-bar" id="vt-bar"></div></div>
+</div>
+
+<!-- ═══ LOGOUT MODAL ════════════════════════════════════ -->
+<div id="logout-modal">
+    <div class="logout-box">
+        <div class="logout-icon"><i class="fas fa-power-off"></i></div>
+        <p class="mono text-[9px] text-red-400/70 uppercase tracking-[0.25em] mb-2">Confirm Action</p>
+        <p class="text-white font-semibold text-[15px] mb-1">Sign out of MASTER OS?</p>
+        <p class="text-slate-500 text-[12px] font-light mb-6">Your chat history will be preserved locally.</p>
+        <div class="flex gap-3">
+            <button class="logout-confirm-btn" id="logout-confirm-btn">
+                <i class="fas fa-power-off mr-2"></i>Sign Out
+            </button>
+            <button class="logout-cancel-btn" id="logout-cancel-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ RENAME MODAL ═══════════════════════════════════ -->
+<div id="rename-modal">
+    <div class="rename-box">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="mono text-[9px] text-blue-400 uppercase tracking-[0.25em]">Rename Investigation</p>
+                <p class="text-white font-semibold text-[15px] mt-1">Enter a new chat name</p>
+            </div>
+            <button id="close-rename-btn" class="text-slate-500 hover:text-white transition-colors p-1 mt-1">
+                <i class="fas fa-xmark text-sm"></i>
+            </button>
+        </div>
+        <input type="text" id="rename-field" placeholder="Chat name..." maxlength="60">
+        <div class="flex gap-3 mt-5">
+            <button id="confirm-rename-btn"
+                class="flex-1 py-2.5 rounded-xl bg-blue-600/15 border border-blue-500/25 text-blue-300 hover:bg-blue-600/25 transition-all mono text-[10px] font-bold tracking-[0.15em] uppercase">
+                <i class="fas fa-check mr-2"></i>Confirm
+            </button>
+            <button id="cancel-rename-btn"
+                class="py-2.5 px-5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:bg-white/8 transition-all mono text-[10px] font-bold tracking-[0.15em] uppercase">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
 
     <script src="./js/chat.js" defer></script>
 </body>
