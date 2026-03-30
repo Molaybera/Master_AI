@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Vault Key is required for offline authentication'],
         unique: true
     },
+    appPassword: {
+        type: String,
+        default: null,
+     // It can be null until the user sets it up in their profile
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -16,31 +16,37 @@ const MODEL_NAME = 'Master';
 // This is a lightweight reinforcement sent at runtime for multi-turn consistency.
 const SYSTEM_RULES = `You are MASTER — a Neural Intelligence specialist in Cyber Security and Programming.
 
-CRITICAL: Always respond with a single valid JSON object. No markdown fences. No text outside the JSON.
-Start with { and end with }. Never wrap in \`\`\`json or any code fences.
+CRITICAL INSTRUCTION: Always respond with a single valid JSON object. No markdown fences. No text outside the JSON.
+
+EMAIL CAPABILITY:
+If the user asks to send an email:
+1. If missing the recipient or message content, ask the user for them (use type: "general").
+2. Once you have BOTH the recipient email and the content, format the response as type: "email". Put the final drafted message in "content", and fill in "recipient" and "subject".
 
 JSON SCHEMA:
 {
-  "type": "security" | "coding" | "list" | "general",
+  "type": "security" | "coding" | "list" | "general" | "email",
   "topic": "2-6 word title",
-  "content": "HTML string: use <b> for bold, <br> for newlines, <h3> for headers",
+  "content": "HTML string: use <b> for bold, <br> for newlines. For emails, put the drafted email body here.",
   "code": "raw code only (no fences), or empty string",
   "items": ["strings for list type only"],
   "risk_level": "None" | "Low" | "Medium" | "High" | "Critical",
-  "prevention": "defensive steps or N/A"
+  "prevention": "defensive steps or N/A",
+  "recipient": "target@example.com (only if type is email)",
+  "subject": "Email Subject (only if type is email)"
 }`;
 
 // ─── JSON EXTRACTION UTILITIES ────────────────────────────────────────────────
 
 /**
- * stripFences — removes ```json ... ``` or ``` ... ``` wrappers.
- * This is the #1 cause of parse failures with qwen2.5-coder.
+ * stripFences — removes markdown wrappers.
+ * (Note: Backticks are escaped here to prevent IDE parser breakage)
  */
 function stripFences(raw) {
     const t = raw.trim();
-    const fenced = t.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/i);
+    const fenced = t.match(/^\`\`\`(?:json)?\s*([\s\S]*?)\`\`\`\s*$/i);
     if (fenced) return fenced[1].trim();
-    return t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    return t.replace(/^\`\`\`(?:json)?\s*/i, '').replace(/\s*\`\`\`\s*$/, '').trim();
 }
 
 /**
@@ -131,15 +137,17 @@ function extractFields(raw) {
         items:      getArr('items'),
         risk_level: get('risk_level') || 'None',
         prevention: get('prevention') || 'N/A',
+        recipient:  get('recipient')  || '',
+        subject:    get('subject')    || ''
     };
 }
 
 /**
  * robustParse — 4-layer repair pipeline:
- *  1. Strip markdown fences  (```json ... ```)
- *  2. Extract first complete JSON object via brace-depth scan
- *  3. Try: raw → sanitise → autoClose → sanitise+autoClose
- *  4. Regex field extraction (last resort, bypasses JSON parser)
+ * 1. Strip markdown fences
+ * 2. Extract first complete JSON object via brace-depth scan
+ * 3. Try: raw → sanitise → autoClose → sanitise+autoClose
+ * 4. Regex field extraction (last resort, bypasses JSON parser)
  */
 function robustParse(raw) {
     if (!raw || typeof raw !== 'string') throw new Error('empty input');
@@ -170,10 +178,10 @@ function robustParse(raw) {
 
 /**
  * normaliseType — corrects the "type" field when the model gets it wrong.
- * A non-empty "code" field always means coding, regardless of what "type" says.
- * A non-empty "items" array always means list.
  */
 function normaliseType(obj) {
+    if (obj.type === 'email') return obj; // Protect email type from being overwritten
+
     const code = (obj.code || '').trim();
     const items = Array.isArray(obj.items) ? obj.items : [];
     if (code.length > 0) obj.type = 'coding';
@@ -184,15 +192,14 @@ function normaliseType(obj) {
 // ─── MARKDOWN → JSON FALLBACK ─────────────────────────────────────────────────
 /**
  * convertMarkdownToJson — used when the model outputs plain markdown instead
- * of JSON. Produces safe schema-compatible output (no pre-rendered styled divs
- * — chat.js handles all visual rendering from the schema fields).
+ * of JSON. Produces safe schema-compatible output.
  */
 function convertMarkdownToJson(raw) {
     const text = raw.trim();
 
-    // Extract fenced code blocks
+    // Extract fenced code blocks (backticks escaped for IDE)
     const codeBlocks = [];
-    const fenceRe = /```(\w*)\n?([\s\S]*?)```/g;
+    const fenceRe = /\`\`\`(\w*)\n?([\s\S]*?)\`\`\`/g;
     let m;
     while ((m = fenceRe.exec(text)) !== null) {
         if (m[2].trim()) codeBlocks.push({ lang: m[1].trim() || 'py', code: m[2].trim() });
@@ -205,6 +212,9 @@ function convertMarkdownToJson(raw) {
     const secKw      = /\b(attack|exploit|vulnerability|malware|phishing|injection|xss|csrf|ddos|ransomware|pentest|hacking|defense)\b/i;
     const isSecurity = secKw.test(text);
 
+    // Quick heuristic for raw emails
+    const isEmail = text.toLowerCase().includes('subject:') && text.toLowerCase().includes('recipient:');
+
     // Build topic from first sentence
     const clean = text
         .replace(/^\s*(certainly|sure|of course|here is|here are|below is|absolutely)[!,.]?\s*/i, '')
@@ -213,7 +223,7 @@ function convertMarkdownToJson(raw) {
 
     // Markdown → safe HTML (no styled divs — just semantic tags)
     const toHtml = (s) => s
-        .replace(/```[\s\S]*?```/g, '')           // strip code fences (go to code field)
+        .replace(/\`\`\`[\s\S]*?\`\`\`/g, '')           // strip code fences (go to code field)
         .replace(/^### (.*$)/gm, '<h3>$1</h3>')
         .replace(/^## (.*$)/gm,  '<h3>$1</h3>')
         .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
@@ -226,7 +236,7 @@ function convertMarkdownToJson(raw) {
     const lang = hasCode ? (codeBlocks[0].lang || 'py') : '';
 
     return JSON.stringify({
-        type:       hasCode ? 'coding' : (isSecurity ? 'security' : (isList ? 'list' : 'general')),
+        type:       hasCode ? 'coding' : (isEmail ? 'email' : (isSecurity ? 'security' : (isList ? 'list' : 'general'))),
         topic,
         content:    toHtml(clean),
         code:       hasCode ? codeBlocks[0].code : '',
@@ -234,6 +244,8 @@ function convertMarkdownToJson(raw) {
         items:      isList  ? listLines.map(l => l.replace(/^\s*\d+\.\s+/, '').trim()) : [],
         risk_level: isSecurity ? 'Medium' : 'None',
         prevention: isSecurity ? 'Follow security best practices.' : 'N/A',
+        recipient:  '',
+        subject:    ''
     });
 }
 

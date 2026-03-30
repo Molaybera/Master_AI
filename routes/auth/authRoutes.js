@@ -8,13 +8,14 @@ const router = express.Router();
 
 // Importing middleware
 const { protect } = require('../../middleware/authMiddleware');
-const getProfile = require('../../controllers/auth/profileController');
 
-// Importing granular controllers
+// Importing profile controller functions
+const { getProfile, updateProfile } = require('../../controllers/auth/profileController');
+
+// Importing granular auth controllers
 const register = require('../../controllers/auth/registerController');
 const login = require('../../controllers/auth/loginController');
 const logout = require('../../controllers/auth/logoutController');
-
 
 /**
  * @route   POST /api/auth/register
@@ -24,11 +25,9 @@ router.post('/register', register);
 
 /**
  * @route   POST /api/auth/login
- * @desc    Initial login step (verify password and send OTP)
+ * @desc    Initial login step (verify password)
  */
 router.post('/login', login);
-
-
 
 /**
  * @route   POST /api/auth/logout
@@ -36,11 +35,17 @@ router.post('/login', login);
  */
 router.post('/logout', logout);
 
-
 /**
  * @route   GET /api/auth/me
  * @desc    Get current user profile (Frontend session check)
  */
 router.get('/me', protect, getProfile);
+
+/**
+ * @route   PUT /api/auth/profile
+ * @desc    Update user profile (username, appPassword)
+ * @access  Protected
+ */
+router.put('/profile', protect, updateProfile);
 
 module.exports = router;

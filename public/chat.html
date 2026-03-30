@@ -6,6 +6,7 @@
     <title>MASTER_OS // NEURAL_LINK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./css/chat.css">
+    <link rel="stylesheet" href="./css/profile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -44,9 +45,14 @@
                 <p class="text-[8px] text-emerald-500 mt-1 uppercase tracking-tighter mono">Secure_Uplink</p>
             </div>
         </div>
-        <button id="logout-btn" class="text-slate-600 hover:text-red-400 transition-colors p-2 flex-shrink-0" title="Logout">
-            <i class="fas fa-power-off text-xs"></i>
-        </button>
+        <div class="flex items-center gap-1">
+            <button id="profile-btn" class="text-slate-600 hover:text-blue-400 transition-colors p-2 flex-shrink-0" title="Settings">
+                <i class="fas fa-cog text-xs"></i>
+            </button>
+            <button id="logout-btn" class="text-slate-600 hover:text-red-400 transition-colors p-2 flex-shrink-0" title="Logout">
+                <i class="fas fa-power-off text-xs"></i>
+            </button>
+        </div>
     </div>
 </aside>
 
@@ -180,6 +186,50 @@
     </div>
 </div>
 
-    <script src="./js/chat.js" defer></script>
+<!-- ═══ PROFILE MODAL ═══════════════════════════════════ -->
+<div id="profile-modal">
+    <div class="profile-box">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="mono text-[9px] text-blue-400 uppercase tracking-[0.25em]">System Configurations</p>
+                <p class="text-white font-semibold text-[15px] mt-1">User Profile & Mail Agent</p>
+            </div>
+            <button id="close-profile-btn" class="text-slate-500 hover:text-white transition-colors p-1 mt-1">
+                <i class="fas fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <div class="mt-5 space-y-4">
+            <div>
+                <label class="block mono text-[9px] text-slate-500 uppercase tracking-wider mb-1.5">Username</label>
+                <input type="text" id="profile-username" class="modal-input" placeholder="Username..." maxlength="40">
+            </div>
+            <div>
+                <label class="block mono text-[9px] text-slate-500 uppercase tracking-wider mb-1.5 flex justify-between">
+                    <span>Google App Password</span>
+                    <a href="https://myaccount.google.com/apppasswords" target="_blank" class="text-blue-500 hover:underline">Get One</a>
+                </label>
+                <input type="password" id="profile-app-password" class="modal-input" placeholder="Leave blank to keep current...">
+                <p class="text-[10px] text-slate-600 mt-1.5">Required for the AI to send emails on your behalf.</p>
+            </div>
+        </div>
+
+        <div id="profile-status" class="mt-3 text-[11px] font-semibold hidden"></div>
+
+        <div class="flex gap-3 mt-6">
+            <button id="save-profile-btn"
+                class="flex-1 py-2.5 rounded-xl bg-blue-600/15 border border-blue-500/25 text-blue-300 hover:bg-blue-600/25 transition-all mono text-[10px] font-bold tracking-[0.15em] uppercase">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+            <button id="cancel-profile-btn"
+                class="py-2.5 px-5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:bg-white/8 transition-all mono text-[10px] font-bold tracking-[0.15em] uppercase">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="./js/chat.js" defer></script>
+<script src="./js/profile.js"></script>
 </body>
 </html>

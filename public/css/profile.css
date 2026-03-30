@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════
+   PROFILE MODAL STYLES (Add to chat.css)
+   ═══════════════════════════════════════════════════ */
+#profile-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#profile-modal.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.profile-box {
+    background: #061022;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 40px rgba(56,189,248,0.05);
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#profile-modal.open .profile-box {
+    transform: translateY(0) scale(1);
+}
+
+.modal-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.modal-input:focus {
+    border-color: rgba(56, 189, 248, 0.5);
+}

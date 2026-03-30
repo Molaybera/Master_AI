@@ -263,7 +263,6 @@ async function sendMessage() {
 
     try {
         // Build conversation history for context (last 10 exchanges = 20 messages)
-        // Format: [{role:'user', content:'...'}, {role:'assistant', content:'...'}]
         const historyForApi = [];
         if (cur && cur.messages.length > 1) {
             const recentMsgs = cur.messages.slice(-20); // last 20 messages
@@ -271,7 +270,6 @@ async function sendMessage() {
                 if (m.role === 'user') {
                     historyForApi.push({ role: 'user', content: m.text });
                 } else if (m.role === 'bot' && m.data) {
-                    // Convert stored bot card data back to a text summary for context
                     const botText = m.data.content
                         ? m.data.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g,' ').trim().slice(0, 400)
                         : (m.data.topic || '');
@@ -301,8 +299,6 @@ async function sendMessage() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const data = await res.json();
-
-        // Support both { reply: "..." } and { message: "..." } and { response: "..." }
         const raw = data.reply || data.message || data.response || data.text || JSON.stringify(data);
 
         try { parsed = robustParse(raw); }
@@ -366,12 +362,12 @@ function appendBotCard(data, animate = false) {
 
     // ── Type correction: if code field is non-empty, always use coding renderer
     // This catches cases where the model returns type:"general" but has code.
-    if ((data.code || '').trim().length > 0 && data.type !== 'coding') {
+    if ((data.code || '').trim().length > 0 && data.type !== 'coding' && data.type !== 'email') {
         data = { ...data, type: 'coding' };
     }
-    // If items array has entries and type wasn't set to security/coding, use list
+    // If items array has entries and type wasn't set to security/coding/email, use list
     if (Array.isArray(data.items) && data.items.length > 0
-        && data.type !== 'coding' && data.type !== 'security') {
+        && data.type !== 'coding' && data.type !== 'security' && data.type !== 'email') {
         data = { ...data, type: 'list' };
     }
 
@@ -383,7 +379,6 @@ function appendBotCard(data, animate = false) {
     const pm = raw.match(/<div class=['"]portfolio-badge['"][^>]*>[\s\S]*?<\/div>/);
     if (pm) { portHtml = pm[0]; raw = raw.replace(pm[0], '').trim(); }
 
-    // content field may already be HTML (from aiService convertMarkdownToJson) or raw text
     const content = md2html(raw);
 
     const legalBlock = (legalHtml || data.risk_level === 'High' || data.risk_level === 'Critical') ? `
@@ -400,22 +395,20 @@ function appendBotCard(data, animate = false) {
         case 'security': html = buildSecurity(data, content) + legalBlock; break;
         case 'coding':   html = buildCoding(data, content);                 break;
         case 'list':     html = buildList(data, content) + legalBlock;      break;
+        case 'email':    html = buildEmail(data, content) + legalBlock;     break;
         default:         html = buildGeneral(data, content) + legalBlock;   break;
     }
     if (portHtml) html += portHtml;
 
     wrap.innerHTML = html;
-    // After HTML is parsed into DOM, fix up data-tw elements:
-    // xAttr() HTML-encodes the content, so reading it back from getAttribute() gives
-    // double-encoded text. Instead, store the intended HTML in a JS property.
+    
     wrap.querySelectorAll('[data-tw]').forEach(el => {
-        // getAttribute returns the HTML-decoded value correctly in all browsers
         el._twContent = el.getAttribute('data-tw');
         el.removeAttribute('data-tw');
     });
     msgArea.appendChild(wrap);
 
-    // Typewriter on prose elements — skip if content is rich HTML (tables, pre, div)
+    // Typewriter on prose elements
     if (animate) {
         const twElReal = [...wrap.querySelectorAll('.prose-content')].find(el => el._twContent !== undefined);
         if (twElReal && twElReal._twContent) {
@@ -463,11 +456,9 @@ function buildSecurity(data, content) {
     </div>`;
 }
 
-// Build a single code terminal HTML string
 function buildTerminalBlock(code, lang, uid) {
     const cleaned = cleanCode(code);
     if (!cleaned) return '';
-    // Auto-detect language from code content when hint is generic
     const autoLang = (l, c) => {
         if (l && l !== 'py' && l !== 'txt' && l !== 'script') return l;
         if (/^(import|from|def |class |print\(|if __name__)/.test(c)) return 'py';
@@ -501,14 +492,6 @@ function buildTerminalBlock(code, lang, uid) {
     </div>`;
 }
 
-/**
- * copyMasterCode
- * Triggered by the buttons generated in aiService.js
- */
-
-// ═══════════════════════════════════════════════════
-//  COPY CODE  —  used by all terminal block copy-btns
-// ═══════════════════════════════════════════════════
 function copyCode(uid, btn) {
     const pre = document.getElementById('pre_' + uid);
     if (!pre) return;
@@ -519,7 +502,6 @@ function copyCode(uid, btn) {
         btn.classList.add('copied');
         setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
     }).catch(() => {
-        // Fallback for older browsers
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -533,27 +515,18 @@ function copyCode(uid, btn) {
     });
 }
 
-
-// ═══════════════════════════════════════════════════
-//  COPY CODE  —  used by all terminal block copy-btns
-// ═══════════════════════════════════════════════════
-
 function copyMasterCode(btn) {
-    // 1. Traverse the DOM to find the code text
     const container = btn.closest('.code-block-container');
     const code = container.querySelector('.code-payload').innerText;
 
-    // 2. Create a temporary textarea for the copy command
     const textArea = document.createElement("textarea");
     textArea.value = code;
     document.body.appendChild(textArea);
     textArea.select();
     
     try {
-        // Execute copy command
         document.execCommand('copy');
         
-        // 3. Provide Visual Feedback
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-check"></i> COPIED';
         btn.style.color = '#10b981';
@@ -573,17 +546,12 @@ function copyMasterCode(btn) {
 
 function buildCoding(data, content) {
     const topicLabel = cleanTopic(data.topic);
-
     const rawContent = String(data.content || '');
 
-    // ── Step 1: Extract all fenced code blocks from BOTH content and code fields
-    //    Model sometimes puts multiple language blocks inside content:
-    //    ```c ... ``` ```java ... ``` ```python ... ```
     const allBlocks = [];
-    const fenceRe   = /```(\w*)\n?([\s\S]*?)```/g;
+    const fenceRe   = /\`\`\`(\w*)\n?([\s\S]*?)\`\`\`/g;
     let m;
 
-    // Check content field for fenced blocks
     const contentFences = [];
     let cleanedContent = rawContent;
     while ((m = fenceRe.exec(rawContent)) !== null) {
@@ -592,23 +560,19 @@ function buildCoding(data, content) {
             contentFences.push(m[0]);
         }
     }
-    // Remove fenced blocks from display content
     for (const fence of contentFences) {
         cleanedContent = cleanedContent.replace(fence, '');
     }
     cleanedContent = md2html(cleanedContent.trim());
 
-    // Check code field — use data.lang hint if available (set by aiService)
     const codeField = cleanCode(data.code || '');
     const langHint  = (data.lang || 'py').toLowerCase();
     if (codeField && allBlocks.length === 0) {
         allBlocks.push({ lang: langHint, code: codeField });
     }
 
-    // ── Step 2: Detect language from content labels like "### C Code:" or "**Java:**"
-    //    If blocks have no language hint, try to detect from surrounding text
     if (allBlocks.length > 1) {
-        const langHints = [...rawContent.matchAll(/(?:#{1,3}|\*\*)?\s*(c|java|python|javascript|bash|cpp|c\+\+)\s*(?:code|:)?\s*(?:\*\*)?\n?```/gi)];
+        const langHints = [...rawContent.matchAll(/(?:#{1,3}|\*\*)?\s*(c|java|python|javascript|bash|cpp|c\+\+)\s*(?:code|:)?\s*(?:\*\*)?\n?\`\`\`/gi)];
         langHints.forEach((hint, idx) => {
             if (allBlocks[idx] && !allBlocks[idx].lang) {
                 allBlocks[idx].lang = hint[1].toLowerCase().replace('c++','cpp');
@@ -616,7 +580,6 @@ function buildCoding(data, content) {
         });
     }
 
-    // ── Step 3: Build terminal HTML for each block
     const terminalsHtml = allBlocks.map(blk => {
         const uid = 'c' + Date.now() + Math.random().toString(36).slice(2,6);
         return buildTerminalBlock(blk.code, blk.lang, uid);
@@ -703,17 +666,107 @@ function buildGeneral(data, content) {
 }
 
 // ═══════════════════════════════════════════════════
+//  EMAIL DRAFT RENDERER & LOGIC
+// ═══════════════════════════════════════════════════
+function buildEmail(data, content) {
+    const uid = 'mail_' + Date.now() + Math.random().toString(36).slice(2,6);
+    return `
+    <div class="space-y-4 p-5 rounded-xl border border-indigo-500/30" style="background:rgba(99,102,241,0.05)">
+        <div class="flex items-center gap-3 border-b border-indigo-500/20 pb-4">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-envelope text-indigo-400 text-xs"></i>
+            </div>
+            <span class="topic-tag" style="color:rgba(129,140,248,.9);border-color:rgba(129,140,248,.2);background:rgba(129,140,248,.1)">EMAIL DRAFT</span>
+        </div>
+        <div class="space-y-2 text-[13px] px-1">
+            <div class="flex gap-2">
+                <span class="text-slate-500 w-16">To:</span>
+                <span class="font-mono text-indigo-300">${xHtml(data.recipient || '[Missing Recipient]')}</span>
+            </div>
+            <div class="flex gap-2">
+                <span class="text-slate-500 w-16">Subject:</span>
+                <span class="font-semibold text-slate-200">${xHtml(data.subject || '[Missing Subject]')}</span>
+            </div>
+        </div>
+        <div class="prose-content p-4 bg-slate-900/60 rounded-lg border border-slate-700/50 mt-3 text-slate-300" ${/<(table|pre|div|h[1-6])\b/i.test(content) ? '' : `data-tw="${xAttr(content)}"`}>${content}</div>
+        <div class="pt-3 flex justify-end">
+            <button class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-[11px] font-bold tracking-widest uppercase transition-colors flex items-center gap-2"
+                onclick="dispatchEmail('${uid}', '${xAttr(data.recipient)}', '${xAttr(data.subject)}', this)"
+                id="btn_${uid}">
+                <i class="fas fa-paper-plane"></i> Confirm & Send
+            </button>
+            <!-- Hidden original payload block -->
+            <div id="body_${uid}" class="hidden">${xHtml(data.content || content)}</div>
+        </div>
+    </div>`;
+}
+
+async function dispatchEmail(uid, recipient, subject, btn) {
+    if (!recipient || recipient === '[Missing Recipient]' || recipient === '') {
+        appendBotCard({
+            type: 'general', topic: 'Dispatch Error', 
+            content: 'Cannot send email: Missing recipient address. Please provide one in the chat.', risk_level: 'Low', prevention: 'N/A'
+        }, true);
+        return;
+    }
+
+    const bodyEl = document.getElementById('body_' + uid);
+    const content = bodyEl ? bodyEl.innerText || bodyEl.textContent : '';
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> DISPATCHING...';
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    try {
+        const res = await fetch('/api/chat/send-mail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ recipient, subject, content })
+        });
+
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+            btn.innerHTML = '<i class="fas fa-check"></i> SENT SUCCESSFULLY';
+            btn.classList.replace('bg-indigo-600', 'bg-emerald-900/40');
+            btn.classList.replace('hover:bg-indigo-500', 'hover:bg-emerald-900/40');
+            btn.classList.replace('text-white', 'text-emerald-400');
+            btn.classList.replace('border-indigo-500/30', 'border-emerald-500/30');
+            
+            appendBotCard({
+                type: 'general', topic: 'System Update',
+                content: `Email successfully dispatched to <b>${xHtml(recipient)}</b>.`,
+                risk_level: 'None', prevention: 'N/A'
+            }, true);
+        } else {
+            throw new Error(data.message || 'Server error during dispatch');
+        }
+    } catch (err) {
+        btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> FAILED';
+        btn.classList.replace('bg-indigo-600', 'bg-red-900/40');
+        btn.classList.replace('hover:bg-indigo-500', 'hover:bg-red-900/40');
+        btn.classList.replace('text-white', 'text-red-400');
+        
+        appendBotCard({
+            type: 'general', topic: 'Dispatch Error',
+            content: `Failed to send email to ${xHtml(recipient)}.<br><br><b>Error:</b> ${xHtml(err.message)}<br><br>Have you configured your App Password in your settings?`,
+            risk_level: 'Medium', prevention: 'N/A'
+        }, true);
+    }
+}
+
+// ═══════════════════════════════════════════════════
 //  SMART RAW-TEXT FALLBACK PARSER
 // ═══════════════════════════════════════════════════
 function parseRawText(raw) {
     const codeBlocks = [], holders = [];
-    let stripped = raw.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    let stripped = raw.replace(/\`\`\`(\w*)\n?([\s\S]*?)\`\`\`/g, (_, lang, code) => {
         const ph = '\x00CODE' + codeBlocks.length + '\x00';
         codeBlocks.push({ lang: lang||'py', code: code.trim() });
         holders.push(ph); return ph;
     });
 
-    // Detect numbered list: "1. **Name** - Description"
     const listRe = /(?:^|\n)\s*(\d+)\.\s+(?:\*\*)?([^*\n:]+?)(?:\*\*)?\s*[-–:]\s*(.+?)(?=\n\s*\d+\.|\n\n|$)/gis;
     const listItems = [];
     let lm;
@@ -777,17 +830,6 @@ function parseRawText(raw) {
 // ═══════════════════════════════════════════════════
 //  JSON RECOVERY  —  4-layer repair pipeline
 // ═══════════════════════════════════════════════════
-
-/**
- * sanitiseJson  — Pass 1 of the repair pipeline
- *
- * Scans the raw string character-by-character so it only
- * touches text that is INSIDE JSON string values.
- * Fixes:
- *  • Bare newlines / CR / tabs inside string values
- *    (model writes a real newline instead of the escape \n)
- *  • Trailing commas before } or ]
- */
 function sanitiseJson(str) {
     let out = '', inStr = false, esc = false;
     for (let i = 0; i < str.length; i++) {
@@ -805,82 +847,54 @@ function sanitiseJson(str) {
     return out.replace(/,\s*([}\]])/g, '$1');
 }
 
-/**
- * extractFields  — Layer 4 (last resort)
- *
- * When the model writes a Python/JS expression instead of a
- * proper JSON string in the "code" field (e.g. "\n".join([...]))
- * or uses completely invalid JSON syntax, we ignore JSON structure
- * entirely and extract each field with targeted regexes.
- */
 function extractFields(raw) {
-    // Extract a string value: "key": "value"
     const get = (key) => {
         const re = new RegExp('"' + key + '"\\s*:\\s*"((?:[^"\\\\]|\\\\[\\s\\S])*)"');
         const m  = raw.match(re);
         if (m) return m[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t');
-        // Non-string value (e.g. "risk_level": None / number)
         const re2 = new RegExp('"' + key + '"\\s*:\\s*([^,"{}\\[\\]]+)');
         const m2  = raw.match(re2);
         return m2 ? m2[1].trim().replace(/^"|"$/g, '') : null;
     };
-
-    // Extract an array: "key": ["a","b"]
     const getArr = (key) => {
         const m = raw.match(new RegExp('"' + key + '"\\s*:\\s*\\[([^\\]]*?)\\]'));
         if (!m) return [];
         return (m[1].match(/"([^"]*)"/g) || []).map(s => s.replace(/"/g, ''));
     };
-
-    // Special handling for "code" field — model often writes a Python
-    // expression like "\n".join([...]) which is not a JSON string.
-    // Grab everything between "code": and the next recognised field.
     let code = get('code') || '';
     if (!code || code.trim() === '\n' || code.trim() === '') {
         const codeRe = raw.match(/"code"\s*:\s*([\s\S]*?)(?="items"|"risk_level"|"prevention"|\n\s*")/);
         if (codeRe) {
             code = codeRe[1].trim()
-                .replace(/^["']|["'],?\s*$/g, '') // strip surrounding quotes
+                .replace(/^["']|["'],?\s*$/g, '') 
                 .replace(/\\n/g, '\n')
                 .replace(/\\t/g, '\t');
         }
     }
-
-    const type    = get('type')       || 'general';
-    const topic   = get('topic')      || 'NEURAL_STREAM';
-    const content = get('content')    || '';
-    const rl      = get('risk_level') || 'None';
-    const prev    = get('prevention') || 'N/A';
-    const items   = getArr('items');
-
-    return { type, topic, content, code, items, risk_level: rl, prevention: prev };
+    return { 
+        type: get('type') || 'general', 
+        topic: get('topic') || 'NEURAL_STREAM', 
+        content: get('content') || '', 
+        code, 
+        items: getArr('items'), 
+        risk_level: get('risk_level') || 'None', 
+        prevention: get('prevention') || 'N/A',
+        recipient: get('recipient') || '',
+        subject: get('subject') || ''
+    };
 }
 
-/**
- * robustParse  — master entry point
- *
- * Tries 5 progressively more aggressive repair strategies:
- *  1. raw first-object slice  (brace-depth scanner, not lastIndexOf)
- *  2. sanitiseJson            (fix bare newlines/tabs + trailing commas)
- *  3. autoClose               (append missing } ] )
- *  4. sanitise + autoClose    (both together)
- *  5. extractFields           (regex field extraction, bypasses JSON entirely)
- */
 function robustParse(raw) {
     if (!raw || typeof raw !== 'string') throw new Error('empty');
-
-    // Strip ```json ... ``` fences before parsing
     let t = raw.trim();
-    const fenced = t.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/i);
+    const fenced = t.match(/^\`\`\`(?:json)?\s*([\s\S]*?)\`\`\`\s*$/i);
     if (fenced) t = fenced[1].trim();
-    else t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    else t = t.replace(/^\`\`\`(?:json)?\s*/i, '').replace(/\s*\`\`\`\s*$/, '').trim();
     raw = t;
 
     const s = raw.indexOf('{');
     if (s === -1) throw new Error('no {');
 
-    // ── Step A: find the FIRST complete JSON object via brace-depth scan ──
-    // This prevents two concatenated objects from being merged.
     let depth = 0, inStr = false, esc = false, end = -1;
     for (let i = s; i < raw.length; i++) {
         const ch = raw[i];
@@ -893,23 +907,11 @@ function robustParse(raw) {
     }
     const raw1 = end !== -1 ? raw.substring(s, end + 1) : raw.substring(s);
 
-    // ── Step B: try to parse with progressive repairs ──────────────────
-    const candidates = [
-        raw1,
-        sanitiseJson(raw1),
-        autoClose(raw1),
-        autoClose(sanitiseJson(raw1)),
-    ];
+    const candidates = [ raw1, sanitiseJson(raw1), autoClose(raw1), autoClose(sanitiseJson(raw1)) ];
     for (const c of candidates) {
         try { const p = JSON.parse(c); if (p && p.type) return p; } catch (_) {}
     }
-
-    // ── Step C: regex field extraction (last resort) ───────────────────
-    try {
-        const p = extractFields(raw1);
-        if (p && p.type) return p;
-    } catch (_) {}
-
+    try { const p = extractFields(raw1); if (p && p.type) return p; } catch (_) {}
     throw new Error('unrecoverable');
 }
 
@@ -937,7 +939,6 @@ function autoClose(s) {
 // ═══════════════════════════════════════════════════
 function md2html(s) {
     if (!s) return '';
-    // If string already has block-level HTML (from aiService) return as-is
     if (/<(table|pre|div|h[1-6]|ul|ol|li|code)\b/i.test(s)) return s;
     return s
         .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
@@ -947,15 +948,12 @@ function md2html(s) {
         .replace(/`([^`\n]+)`/g, '<code class="ic">$1</code>');
 }
 
-// Strip all HTML tags from topic strings — prevents <GL><BR><LI> etc. showing in chips
 function cleanTopic(s) {
     return String(s || '')
         .replace(/<[^>]*>/g, '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&')
         .replace(/\s+/g,' ').trim().slice(0, 60) || 'NEURAL_STREAM';
 }
 
-// Strip HTML tags and fix escape sequences from code field
-// Model errors: <br> in code, literal \n instead of newline, HTML entities
 function cleanCode(s) {
     if (!s) return '';
     return String(s)
@@ -968,9 +966,7 @@ function cleanCode(s) {
         .replace(/^\n+|\n+$/g, '');
 }
 
-function xHtml(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function xHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function xAttr(s) { return String(s||'').replace(/"/g,'&quot;'); }
 function xRe(s) { return String(s||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
