@@ -423,6 +423,7 @@ function appendBotCard(data, animate = false) {
         }
     }
     scrollDown();
+    if (data.type === 'email') lockOldEmailDrafts();
 }
 
 // ═══════════════════════════════════════════════════
@@ -667,9 +668,66 @@ function buildGeneral(data, content) {
 
 // ═══════════════════════════════════════════════════
 //  EMAIL DRAFT RENDERER & LOGIC
+// ═══════════════════════════════════════════════════ 
 // ═══════════════════════════════════════════════════
+//  LOCK ALL PREVIOUS EMAIL DRAFTS
+//  Called every time a new email card is rendered.
+//  Leaves only the last draft interactive.
+// ═══════════════════════════════════════════════════
+function lockOldEmailDrafts() {
+    // Grab every email draft send-button in the chat (they all have id="btn_mail_...")
+    const allEmailBtns = Array.from(msgArea.querySelectorAll('button[id^="btn_mail_"]'));
+
+    // All except the very last one should be locked
+    const tolock = allEmailBtns.slice(0, -1);
+
+    tolock.forEach(btn => {
+        const uid = btn.id.replace('btn_', ''); // e.g. "mail_1234abc"
+
+        // Lock the button
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-lock"></i> DRAFT SUPERSEDED';
+        btn.className = 'px-5 py-2.5 bg-slate-800/60 text-slate-500 rounded-md text-[11px] font-bold tracking-widest uppercase flex items-center gap-2 opacity-50 cursor-not-allowed';
+
+        // Lock the editable fields
+        const toField   = document.getElementById('to_'   + uid);
+        const subField  = document.getElementById('sub_'  + uid);
+        const bodyField = document.getElementById('body_' + uid);
+        if (toField)   toField.contentEditable   = 'false';
+        if (subField)  subField.contentEditable  = 'false';
+        if (bodyField) bodyField.contentEditable = 'false';
+
+        // Dim the whole card slightly to visually signal it's inactive
+        const card = btn.closest('.space-y-4');
+        if (card) card.style.opacity = '0.45';
+    });
+}
+
+
 function buildEmail(data, content) {
     const uid = 'mail_' + Date.now() + Math.random().toString(36).slice(2,6);
+    const isSent = data.emailSent === true;   // ← NEW: read persisted sent state
+
+    const userName = document.getElementById('user-display').textContent.trim();
+    const safeUserName = (userName && userName !== '—') ? userName : 'User';
+
+    let finalContent = content || '';
+    finalContent = finalContent.replace(/(?:<br\s*\/?>|<\/?p>|\n|\s)*(?:Sincerely|Best regards|Regards|Yours truly|Thanks|Thank you|Warm regards),?(?:<br\s*\/?>|<\/?p>|\n|\s)*(?:\[[^\]]*name[^\]]*\]|your name)(?:<\/p>)?$/i, '');
+    finalContent = finalContent.replace(/(?:<br\s*\/?>|<\/?p>|\n|\s)*\[(?:your )?name\](?:<\/p>)?$/i, '');
+    const signOff = `<br><br>Best regards,<br>- ${safeUserName.toUpperCase()}`;
+    finalContent += signOff;
+
+    // ← NEW: when already sent, badge changes from EDITABLE → SENT
+    const badgeHtml = isSent
+        ? `<span class="mono text-[9px] text-emerald-400/70 ml-auto border border-emerald-500/20 px-2 py-0.5 rounded flex items-center gap-1"><i class="fas fa-check text-[8px]"></i> SENT</span>`
+        : `<span class="mono text-[9px] text-indigo-400/70 ml-auto border border-indigo-500/20 px-2 py-0.5 rounded flex items-center gap-1"><i class="fas fa-pen text-[8px]"></i> EDITABLE</span>`;
+
+    // ← NEW: fields are read-only and button is disabled if already sent
+    const editableAttr = isSent ? 'false' : 'true';
+    const btnHtml = isSent
+        ? `<button disabled id="btn_${uid}" class="px-5 py-2.5 bg-emerald-900/40 text-emerald-400 rounded-md text-[11px] font-bold tracking-widest uppercase flex items-center gap-2 opacity-70 cursor-not-allowed"><i class="fas fa-check"></i> SENT SUCCESSFULLY</button>`
+        : `<button id="btn_${uid}" onclick="dispatchEmail('${uid}', this)" style="cursor:pointer;" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-[11px] font-bold tracking-widest uppercase transition-colors flex items-center gap-2"><i class="fas fa-paper-plane"></i> Confirm & Send</button>`;
+
     return `
     <div class="space-y-4 p-5 rounded-xl border border-indigo-500/30" style="background:rgba(99,102,241,0.05)">
         <div class="flex items-center gap-3 border-b border-indigo-500/20 pb-4">
@@ -677,45 +735,49 @@ function buildEmail(data, content) {
                 <i class="fas fa-envelope text-indigo-400 text-xs"></i>
             </div>
             <span class="topic-tag" style="color:rgba(129,140,248,.9);border-color:rgba(129,140,248,.2);background:rgba(129,140,248,.1)">EMAIL DRAFT</span>
+            ${badgeHtml}
         </div>
         <div class="space-y-2 text-[13px] px-1">
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
                 <span class="text-slate-500 w-16">To:</span>
-                <span class="font-mono text-indigo-300">${xHtml(data.recipient || '[Missing Recipient]')}</span>
+                <div contenteditable="${editableAttr}" id="to_${uid}" class="font-mono text-indigo-300 bg-black/20 px-2 py-1.5 rounded w-full outline-none focus:ring-1 ring-indigo-500/50 transition-shadow">${xHtml(data.recipient || '')}</div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center mt-2">
                 <span class="text-slate-500 w-16">Subject:</span>
-                <span class="font-semibold text-slate-200">${xHtml(data.subject || '[Missing Subject]')}</span>
+                <div contenteditable="${editableAttr}" id="sub_${uid}" class="font-semibold text-slate-200 bg-black/20 px-2 py-1.5 rounded w-full outline-none focus:ring-1 ring-indigo-500/50 transition-shadow">${xHtml(data.subject || '')}</div>
             </div>
         </div>
-        <div class="prose-content p-4 bg-slate-900/60 rounded-lg border border-slate-700/50 mt-3 text-slate-300" ${/<(table|pre|div|h[1-6])\b/i.test(content) ? '' : `data-tw="${xAttr(content)}"`}>${content}</div>
-        <div class="pt-3 flex justify-end">
-            <button class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-[11px] font-bold tracking-widest uppercase transition-colors flex items-center gap-2"
-                onclick="dispatchEmail('${uid}', '${xAttr(data.recipient)}', '${xAttr(data.subject)}', this)"
-                id="btn_${uid}">
-                <i class="fas fa-paper-plane"></i> Confirm & Send
-            </button>
-            <!-- Hidden original payload block -->
-            <div id="body_${uid}" class="hidden">${xHtml(data.content || content)}</div>
+        <div contenteditable="${editableAttr}" id="body_${uid}" class="prose-content p-4 bg-slate-900/60 rounded-lg border border-slate-700/50 mt-3 text-slate-300 outline-none focus:ring-1 ring-indigo-500/50 transition-all min-h-[100px]" ${/<(table|pre|div|h[1-6])\b/i.test(finalContent) ? '' : 'data-tw="' + xAttr(finalContent) + '"'}>${finalContent}</div>
+        <div class="mt-4 flex justify-end border-t border-indigo-500/20 pt-4">
+            ${btnHtml}
         </div>
     </div>`;
 }
 
-async function dispatchEmail(uid, recipient, subject, btn) {
-    if (!recipient || recipient === '[Missing Recipient]' || recipient === '') {
+async function dispatchEmail(uid, btn) {
+    const recipientEl = document.getElementById('to_' + uid);
+    const subjectEl = document.getElementById('sub_' + uid);
+    const bodyEl = document.getElementById('body_' + uid);
+
+    const recipient = recipientEl ? recipientEl.innerText.trim() : '';
+    const subject = subjectEl ? subjectEl.innerText.trim() : '';
+    const content = bodyEl ? bodyEl.innerHTML : '';
+
+    if (!recipient || recipient === '') {
         appendBotCard({
-            type: 'general', topic: 'Dispatch Error', 
-            content: 'Cannot send email: Missing recipient address. Please provide one in the chat.', risk_level: 'Low', prevention: 'N/A'
+            type: 'general', topic: 'Dispatch Error',
+            content: 'Cannot send email: Missing recipient address. Please provide one.',
+            risk_level: 'Low', prevention: 'N/A'
         }, true);
         return;
     }
 
-    const bodyEl = document.getElementById('body_' + uid);
-    const content = bodyEl ? bodyEl.innerText || bodyEl.textContent : '';
-
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> DISPATCHING...';
     btn.classList.add('opacity-50', 'cursor-not-allowed');
+    if (recipientEl) recipientEl.contentEditable = "false";
+    if (subjectEl) subjectEl.contentEditable = "false";
+    if (bodyEl) bodyEl.contentEditable = "false";
 
     try {
         const res = await fetch('/api/chat/send-mail', {
@@ -726,28 +788,50 @@ async function dispatchEmail(uid, recipient, subject, btn) {
         });
 
         const data = await res.json();
-        
+
         if (res.ok && data.success) {
             btn.innerHTML = '<i class="fas fa-check"></i> SENT SUCCESSFULLY';
             btn.classList.replace('bg-indigo-600', 'bg-emerald-900/40');
             btn.classList.replace('hover:bg-indigo-500', 'hover:bg-emerald-900/40');
             btn.classList.replace('text-white', 'text-emerald-400');
-            btn.classList.replace('border-indigo-500/30', 'border-emerald-500/30');
-            
+
+            // ── PERSIST SENT STATE ──────────────────────────────────────
+            const cur = chats.find(c => c.id === currentChatId);
+            if (cur) {
+                const emailMsg = [...cur.messages].reverse().find(m =>
+                    m.role === 'bot' && m.data && m.data.type === 'email' && !m.data.emailSent
+                );
+                if (emailMsg) emailMsg.data.emailSent = true;
+
+                const sysUpdate = {
+                    type: 'general', topic: 'System Update',
+                    content: `Email successfully dispatched to <b>${xHtml(recipient)}</b>.`,
+                    risk_level: 'None', prevention: 'N/A'
+                };
+                cur.messages.push({ role: 'bot', data: sysUpdate });
+                save();
+            }
+            // ───────────────────────────────────────────────────────────
+
             appendBotCard({
                 type: 'general', topic: 'System Update',
                 content: `Email successfully dispatched to <b>${xHtml(recipient)}</b>.`,
                 risk_level: 'None', prevention: 'N/A'
             }, true);
+
         } else {
             throw new Error(data.message || 'Server error during dispatch');
         }
+
     } catch (err) {
-        btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> FAILED';
-        btn.classList.replace('bg-indigo-600', 'bg-red-900/40');
-        btn.classList.replace('hover:bg-indigo-500', 'hover:bg-red-900/40');
-        btn.classList.replace('text-white', 'text-red-400');
-        
+        if (recipientEl) recipientEl.contentEditable = "true";
+        if (subjectEl) subjectEl.contentEditable = "true";
+        if (bodyEl) bodyEl.contentEditable = "true";
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Retry Send';
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
         appendBotCard({
             type: 'general', topic: 'Dispatch Error',
             content: `Failed to send email to ${xHtml(recipient)}.<br><br><b>Error:</b> ${xHtml(err.message)}<br><br>Have you configured your App Password in your settings?`,
@@ -755,7 +839,6 @@ async function dispatchEmail(uid, recipient, subject, btn) {
         }, true);
     }
 }
-
 // ═══════════════════════════════════════════════════
 //  SMART RAW-TEXT FALLBACK PARSER
 // ═══════════════════════════════════════════════════
