@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MASTER_OS // NEURAL_LINK</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="./css/chat.css">
     <link rel="stylesheet" href="./css/profile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -108,14 +112,35 @@
         <span class="mono text-[10px] text-blue-400 font-bold tracking-[0.2em] uppercase">Processing Neural Weights...</span>
     </div>
 
-    <!-- Input -->
+<!-- Input -->
     <footer class="px-4 md:px-12 pb-5 pt-2 flex-shrink-0"
             style="background:linear-gradient(to top, #020b18 60%, rgba(2,11,24,0.7) 100%)">
         <div class="max-w-3xl mx-auto">
-            <div class="input-wrap">
+            
+            <!-- NEW: Attachment Chip (Hidden by default) -->
+            <div id="attachment-chip" class="hidden items-center gap-2 mb-2 px-3 py-1.5 bg-blue-900/20 border border-blue-500/30 rounded-lg w-max max-w-full">
+                <i class="fas fa-file-alt text-blue-400 text-[10px]"></i>
+                <span id="attachment-name" class="text-[11px] text-blue-200 truncate max-w-[200px] mono">file.txt</span>
+                <button id="remove-attachment-btn" class="text-slate-400 hover:text-red-400 ml-2 transition-colors" title="Remove attachment">
+                    <i class="fas fa-times text-[10px]"></i>
+                </button>
+            </div>
+
+            <div class="input-wrap relative">
+                <!-- NEW: Hidden File Input -->
+                <input type="file" id="file-upload" class="hidden" accept=".txt,.md,.csv,.json,.py,.js,.html,.css,.log">
+                
+                <!-- NEW: Attach Button -->
+                <button class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors z-10" 
+                        id="attach-btn" title="Attach Document">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+
                 <input type="text" id="user-input" autocomplete="off" maxlength="2000"
-                    placeholder="Ask MASTER about security threats or code..."
-                    aria-label="Chat input">
+                    placeholder="Ask MASTER or attach a document..."
+                    aria-label="Chat input"
+                    style="padding-left: 40px;"> <!-- Padding adjusted for the new attach button -->
+                
                 <span class="char-count" id="char-count">0</span>
                 <button class="mic-btn" id="mic-btn" title="Voice Input">
                     <i class="fas fa-microphone"></i>
@@ -231,5 +256,6 @@
 
 <script src="./js/chat.js" defer></script>
 <script src="./js/profile.js"></script>
+<script src="./js/document.js"></script>
 </body>
 </html>

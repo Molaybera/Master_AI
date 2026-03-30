@@ -232,43 +232,65 @@ function loadChat(chat) {
 async function sendMessage() {
     if (isProcessing) return;
     const msg = userInput.value.trim();
-    if (!msg) return;
+    
+    // Prevent sending if both text and document are empty
+    if (!msg && !currentDocumentContext) return;
 
     isProcessing = true;
     userInput.value = '';
     charCountEl.textContent = '0';
     charCountEl.classList.remove('warn');
 
-    // Lock the input field visually while processing
     document.querySelector('.input-wrap').classList.add('locked');
     sendBtn.disabled = true;
     micBtn.disabled  = true;
 
     // Show user bubble
-    appendUserBubble(msg);
+    const displayMsg = msg || `[Attached Document: ${currentDocumentName}]`;
+    appendUserBubble(displayMsg);
     showEmpty(false);
 
-    // Save user message to history
+    // Save to history including the hidden document context
     const cur = chats.find(c => c.id === currentChatId);
     if (cur) {
-        cur.messages.push({ role: 'user', text: msg });
+        cur.messages.push({ 
+            role: 'user', 
+            text: displayMsg,
+            docContext: currentDocumentContext ? `[SYSTEM: The user has attached a document named '${currentDocumentName}'. Read the content below and refer to it to answer their query.]\n\n<DOCUMENT_CONTENT>\n${currentDocumentContext}\n</DOCUMENT_CONTENT>` : null
+        });
         save();
     }
 
-    // Show loading
+    // Clear the attachment UI safely
+    if (currentDocumentContext) {
+        currentDocumentContext = "";
+        currentDocumentName = "";
+        const fileUploadEl = document.getElementById('file-upload');
+        if(fileUploadEl) fileUploadEl.value = "";
+        const chip = document.getElementById('attachment-chip');
+        if(chip) {
+            chip.classList.add('hidden');
+            chip.classList.remove('flex');
+        }
+    }
+
     neuralSync.classList.remove('hidden');
     gpuStats.textContent = Math.floor(Math.random() * 40 + 30) + '%';
 
     let parsed = null;
 
     try {
-        // Build conversation history for context (last 10 exchanges = 20 messages)
         const historyForApi = [];
-        if (cur && cur.messages.length > 1) {
-            const recentMsgs = cur.messages.slice(-20); // last 20 messages
+        if (cur && cur.messages.length > 0) {
+            const recentMsgs = cur.messages.slice(-20);
             for (const m of recentMsgs) {
                 if (m.role === 'user') {
-                    historyForApi.push({ role: 'user', content: m.text });
+                    // Inject hidden document context into API request
+                    let apiContent = m.text;
+                    if (m.docContext) {
+                        apiContent = `${m.docContext}\n\nUser Query: ${m.text}`;
+                    }
+                    historyForApi.push({ role: 'user', content: apiContent });
                 } else if (m.role === 'bot' && m.data) {
                     const botText = m.data.content
                         ? m.data.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g,' ').trim().slice(0, 400)
@@ -282,10 +304,9 @@ async function sendMessage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ message: msg, history: historyForApi })
+            body: JSON.stringify({ message: msg || "Please analyze the attached document.", history: historyForApi })
         });
 
-        // If server returned 401 (session expired), redirect to login
         if (res.status === 401) {
             const d = await res.json().catch(() => ({}));
             appendBotCard({
@@ -317,22 +338,19 @@ async function sendMessage() {
         neuralSync.classList.add('hidden');
         gpuStats.textContent = '2%';
         isProcessing = false;
-        // Unlock input
         document.querySelector('.input-wrap').classList.remove('locked');
         micBtn.disabled = false;
         updateSendBtn();
         setTimeout(() => userInput.focus(), 100);
     }
 
-    // Update chat title on first reply
     if (cur && cur.title === 'New Investigation' && parsed.topic) {
         cur.title = parsed.topic.slice(0, 40);
         setNavTitle(cur.title);
     }
 
-    // Save + render
     if (cur) { cur.messages.push({ role: 'bot', data: parsed }); save(); renderHistory(); }
-    appendBotCard(parsed, true); // true = animate
+    appendBotCard(parsed, true);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1263,6 +1281,70 @@ renameField.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeRenameModal();
 });
 renameModal.addEventListener('click', e => { if (e.target === renameModal) closeRenameModal(); });
+
+
+// ═══════════════════════════════════════════════════
+//  OFFLINE DOCUMENT READER (RAG)
+// ═══════════════════════════════════════════════════
+let currentDocumentContext = "";
+let currentDocumentName = "";
+
+const fileUpload = document.getElementById('file-upload');
+const attachBtn = document.getElementById('attach-btn');
+const attachmentChip = document.getElementById('attachment-chip');
+const attachmentName = document.getElementById('attachment-name');
+const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
+
+attachBtn.addEventListener('click', () => fileUpload.click());
+
+fileUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+        appendBotCard({
+            type: 'general', topic: 'File Too Large',
+            content: 'Please upload text files under 1MB to prevent Neural Link overload.',
+            risk_level: 'Low', prevention: 'N/A'
+        }, true);
+        fileUpload.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        currentDocumentContext = event.target.result;
+        currentDocumentName = file.name;
+
+        attachmentName.textContent = currentDocumentName;
+        attachmentChip.classList.remove('hidden');
+        attachmentChip.classList.add('flex');
+        
+        updateSendBtn();
+        document.getElementById('user-input').focus();
+    };
+    reader.readAsText(file);
+});
+
+removeAttachmentBtn.addEventListener('click', () => {
+    currentDocumentContext = "";
+    currentDocumentName = "";
+    fileUpload.value = "";
+    attachmentChip.classList.add('hidden');
+    attachmentChip.classList.remove('flex');
+    updateSendBtn();
+});
+
+// OVERRIDE: Update send button to allow sending if a document is attached
+function updateSendBtn() {
+    const userInputEl = document.getElementById('user-input');
+    if (!userInputEl) return;
+    const empty = userInputEl.value.trim().length === 0;
+    const sendBtnEl = document.getElementById('send-btn');
+    if (sendBtnEl) {
+        sendBtnEl.disabled = (empty && !currentDocumentContext) || isProcessing;
+    }
+}
 
 // ─── BOOT ───
 // Send button starts disabled (empty input)

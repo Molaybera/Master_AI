@@ -385,3 +385,29 @@
             font-family:'JetBrains Mono',monospace;font-size:12.5px;
             line-height:22px;color:#a5d8ff;margin:10px 0;
         }
+
+.doc-input-padded {
+    padding-left: 44px !important; 
+}
+
+/* Custom styling for the attach button */
+.attach-btn-custom {
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+
+/* Smooth fade-up animation for the file chip */
+#attachment-chip {
+    animation: slideUpFade 0.3s ease forwards;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
