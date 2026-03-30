@@ -13,7 +13,6 @@ const getProfile = require('../../controllers/auth/profileController');
 // Importing granular controllers
 const register = require('../../controllers/auth/registerController');
 const login = require('../../controllers/auth/loginController');
-const verifyOtp = require('../../controllers/auth/verifyOtpController');
 const logout = require('../../controllers/auth/logoutController');
 
 
@@ -29,11 +28,6 @@ router.post('/register', register);
  */
 router.post('/login', login);
 
-/**
- * @route   POST /api/auth/verify-otp
- * @desc    Second login step (verify OTP and create session)
- */
-router.post('/verify-otp', verifyOtp);
 
 
 /**

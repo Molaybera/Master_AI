@@ -12,8 +12,8 @@ const getProfile = async (req, res) => {
             return res.status(401).json({ success: false, message: "No active session." });
         }
 
-        // Find user by ID and exclude sensitive data
-        const user = await User.findById(req.session.userId).select('-password -otp');
+        // Find user by ID and exclude the sensitive vaultKey
+        const user = await User.findById(req.session.userId).select('-vaultKey');
         
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });

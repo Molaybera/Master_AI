@@ -98,13 +98,13 @@
 
         async function checkSession() {
             try {
-                const response = await fetch('/api/auth/me');
+                // MUST include credentials here too!
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
                 const data = await response.json();
                 if (data.success) {
                     const authLink = document.getElementById('authLink');
                     authLink.innerHTML = `<i class="fas fa-terminal mr-2"></i> ${data.user.username.toUpperCase()}`;
-                    authLink.href = "/chat.html";
+                    authLink.href = "/chat";
                 }
             } catch (err) {}
         }
-        checkSession();

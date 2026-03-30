@@ -46,13 +46,14 @@ app.use(session({
     }
 }));
 
-// 4. Static Files (Moved after session to ensure cookie visibility)
-app.use(express.static(path.join(__dirname, 'public')));
 
-// 5. Use Routes
+// 4. Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/', viewRoutes);
+
+// 5. Static Files (Moved after session to ensure cookie visibility)
+app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 5000;
 

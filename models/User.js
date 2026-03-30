@@ -1,8 +1,6 @@
 /**
  * User.js
- * Purpose: Defines the Mongoose Schema for users with Email and OTP support.
- * This blueprint now includes an email field for OTP delivery and 
- * account verification status to ensure security.
+ * Purpose: Defines the Mongoose Schema for the MASTER OS Vault-Key system.
  */
 
 const mongoose = require('mongoose');
@@ -23,18 +21,10 @@ const userSchema = new mongoose.Schema({
         trim: true,
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
-    password: {
+    vaultKey: {
         type: String,
-        required: [true, 'Password is required'],
-        minlength: [8, 'Password must be at least 8 characters long']
-    },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
-    otp: {
-        code: String,
-        expiresAt: Date
+        required: [true, 'Vault Key is required for offline authentication'],
+        unique: true
     },
     createdAt: {
         type: Date,

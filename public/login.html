@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
 </head>
 <body class="p-6">
     <div id="canvas-container"></div>
@@ -35,10 +34,11 @@
 
         <div class="mb-10 text-center">
             <h1 class="text-4xl font-black text-white italic tracking-tighter uppercase">Master_Login</h1>
+            <p class="mono text-[10px] text-emerald-500 mt-2 tracking-widest uppercase"><i class="fas fa-lock text-[9px] mr-1"></i> Offline Vault Verification</p>
             <div class="h-1 w-24 bg-blue-500 mx-auto mt-2 rounded-full opacity-50"></div>
         </div>
 
-        <!-- STEP 1: Login -->
+        <!-- The Unified Vault Login Form -->
         <form id="loginForm" class="space-y-6">
             <div>
                 <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 mb-2 block">Identity (Email)</label>
@@ -46,30 +46,26 @@
             </div>
 
             <div>
-                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 mb-2 block">Encryption (Password)</label>
+                <div class="flex justify-between items-center ml-1 mb-2">
+                    <label class="mono text-[10px] text-blue-400 uppercase tracking-widest block">Vault Key</label>
+                    <!-- File Upload Button for the Wow Factor -->
+                    <label for="vaultFile" class="mono text-[9px] cursor-pointer text-emerald-400 hover:text-white transition-colors border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 rounded">
+                        <i class="fas fa-file-upload"></i> Upload Key File
+                    </label>
+                    <input type="file" id="vaultFile" accept=".txt" class="hidden">
+                </div>
+                
                 <div class="relative">
-                    <input type="password" id="password" required class="input-cyber w-full py-3 pl-4 pr-12 text-white rounded-sm" placeholder="••••••••••••">
+                    <input type="password" id="password" required class="input-cyber w-full py-3 pl-4 pr-12 text-white rounded-sm" placeholder="Paste 16-Char Vault Key...">
                     <button type="button" id="togglePass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors">
                         <i class="fas fa-eye" id="eyeIcon"></i>
                     </button>
                 </div>
             </div>
 
-            <button type="submit" id="loginBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm mt-4">
-                Initialize Login
+            <button type="submit" id="loginBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm mt-4 tracking-[0.2em]">
+                Decrypt & Access
             </button>
-        </form>
-
-        <!-- STEP 2: OTP -->
-        <form id="otpForm" class="hidden space-y-6">
-            <div class="text-center">
-                <i class="fas fa-clock text-blue-400 text-3xl mb-3"></i>
-                <p class="mono text-[11px] text-slate-400 uppercase tracking-widest">MFA Verification Required</p>
-                <div id="timerContainer" class="mt-2 mono text-xl font-bold text-blue-400">01:00</div>
-            </div>
-            <input type="text" id="otpCode" maxlength="6" required class="input-cyber w-full py-4 text-white text-center text-4xl tracking-[0.5em] mono rounded-sm" placeholder="000000">
-            <button type="submit" id="verifyBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm bg-gradient-to-r from-emerald-700 to-emerald-500">Execute Verification</button>
-            <button type="button" onclick="location.reload()" class="w-full mono text-[10px] text-slate-500 hover:text-blue-400 transition-colors uppercase tracking-widest">[ Abort Mission ]</button>
         </form>
 
         <div class="mt-10 pt-6 border-t border-white/5 flex justify-between items-center">

@@ -27,7 +27,8 @@
 
         <div class="mb-8 text-center">
             <h1 class="text-4xl font-black text-white italic tracking-tighter uppercase">Create_ID</h1>
-            <p class="mono text-[10px] text-blue-400 mt-2 tracking-widest uppercase">Identity Initialization Protocol</p>
+            <p class="mono text-[10px] text-emerald-500 mt-2 tracking-widest uppercase"><i class="fas fa-lock text-[9px] mr-1"></i> Offline Vault Generation</p>
+            <div class="h-1 w-24 bg-blue-500 mx-auto mt-2 rounded-full opacity-50"></div>
         </div>
 
         <form id="registerForm" class="space-y-5">
@@ -46,12 +47,12 @@
             </div>
 
             <div class="space-y-3">
-                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 block">Encryption_Code</label>
+                <label class="mono text-[10px] text-blue-400 uppercase tracking-widest ml-1 block">Offline_Vault_Key</label>
                 
                 <div class="relative">
-                    <input type="password" id="password" required minlength="8"
-                        class="input-cyber w-full py-3 pl-4 pr-12 text-white placeholder-slate-600 rounded-sm"
-                        placeholder="••••••••••••">
+                    <input type="password" id="password" required minlength="16" readonly
+                        class="input-cyber w-full py-3 pl-4 pr-12 text-emerald-400 placeholder-slate-600 rounded-sm cursor-not-allowed border-emerald-500/30"
+                        placeholder="Click Generate to create key...">
                     <button type="button" id="togglePass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors">
                         <i class="fas fa-eye" id="eyeIcon"></i>
                     </button>
@@ -62,29 +63,25 @@
                     <div id="strengthBar" class="strength-bar bg-red-500"></div>
                 </div>
 
-                <!-- Condition Checklist -->
-                <ul class="mono text-[9px] text-slate-500 space-y-1.5 ml-1 uppercase tracking-tight">
-                    <li id="cond-length" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> 8+ Characters</li>
-                    <li id="cond-upper" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> Upper & Lower Case</li>
-                    <li id="cond-num" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> Numeric Digit</li>
-                    <li id="cond-spec" class="condition-item"><i class="fas fa-circle text-[4px] mr-2"></i> Special Symbol (!@#$)</li>
-                </ul>
-
                 <!-- Large Generate Button -->
                 <button type="button" id="genPass" class="w-full py-3 bg-white/5 border border-emerald-500/30 text-emerald-400 mono text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-2">
-                    <i class="fas fa-key text-[9px]"></i> Generate_Password
+                    <i class="fas fa-key text-[9px]"></i> Generate_Vault_Key
                 </button>
+
+                <p class="mono text-[8px] text-red-400 text-center uppercase tracking-widest mt-2 leading-tight">
+                    Warning: This key is heavily encrypted. Master OS cannot recover it if lost.
+                </p>
             </div>
 
-            <button type="submit" id="registerBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm mt-6">
-                Execute Register
+            <button type="submit" id="registerBtn" class="btn-cyber w-full py-4 text-white font-bold rounded-sm mt-6 tracking-[0.2em]" disabled>
+                AWAITING KEY GENERATION...
             </button>
         </form>
 
         <div class="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
             <span class="text-[10px] text-slate-600 uppercase tracking-widest">Active ID?</span>
             <a href="/login" class="mono text-[10px] text-blue-400 hover:text-white transition-all uppercase tracking-widest">
-                [login]_Return_To_Base
+                Return_To_Base_
             </a>
         </div>
     </div>

@@ -1,8 +1,7 @@
 /**
  * registerController.js
- * Purpose: Handles standard user registration.
- * This file extracts user details, hashes the password, and creates the account.
- * Verification via OTP will be handled during the login process.
+ * Purpose: Handles Vault-Key registration.
+ * Extracts user details, hashes the generated Vault Key, and creates the account.
  */
 
 const User = require('../../models/User');
@@ -10,13 +9,14 @@ const bcrypt = require('bcryptjs');
 
 const register = async (req, res) => {
     try {
+        // The frontend currently sends the generated key under the 'password' field
         const { username, email, password } = req.body;
 
         // 1. Comprehensive validation check
         if (!username || !email || !password) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Please provide username, email, and password." 
+                message: "Please provide username, email, and your generated Vault Key." 
             });
         }
 
@@ -33,17 +33,15 @@ const register = async (req, res) => {
             });
         }
 
-        // 3. Hash password before saving
-        // Salt rounds set to 12 for high security
+        // 3. Hash the Vault Key before saving for maximum local security
         const salt = await bcrypt.genSalt(12);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedKey = await bcrypt.hash(password, salt);
 
-        // 4. Create new user instance
-        // Account is created but will require OTP verification at login
+        // 4. Create new user instance using the new schema
         const newUser = new User({
             username,
             email,
-            password: hashedPassword
+            vaultKey: hashedKey
         });
 
         // 5. Save to MongoDB
@@ -51,7 +49,7 @@ const register = async (req, res) => {
 
         res.status(201).json({ 
             success: true, 
-            message: "Registration successful! Redirecting to login for verification." 
+            message: "Identity created securely! Redirecting to login." 
         });
 
     } catch (error) {
