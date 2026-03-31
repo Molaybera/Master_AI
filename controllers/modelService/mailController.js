@@ -46,7 +46,7 @@ const sendEmail = async (req, res) => {
 
         // 5. Construct the Email Options
         const mailOptions = {
-            from: `"${user.username} via MASTER" <${user.email}>`,
+            from: `"${user.username}" <${user.email}>`,
             to: recipient,
             subject: subject,
             html: content // Content is pre-formatted HTML from the AI
@@ -65,7 +65,7 @@ const sendEmail = async (req, res) => {
         console.error('[MAIL AGENT ERROR]:', error);
         return res.status(500).json({ 
             success: false, 
-            message: "Failed to dispatch email. Please verify your App Password." 
+            message: "Failed to dispatch email. Please verify your App Password or check the internet connection."
         });
     }
 };

@@ -234,7 +234,7 @@ async function sendMessage() {
     const msg = userInput.value.trim();
     
     // Prevent sending if both text and document are empty
-    if (!msg && !currentDocumentContext) return;
+    if (!msg && !window.currentDocumentContext) return;
 
     isProcessing = true;
     userInput.value = '';
@@ -246,7 +246,7 @@ async function sendMessage() {
     micBtn.disabled  = true;
 
     // Show user bubble
-    const displayMsg = msg || `[Attached Document: ${currentDocumentName}]`;
+    const displayMsg = msg || `[Attached Document: ${window.currentDocumentName}]`;
     appendUserBubble(displayMsg);
     showEmpty(false);
 
@@ -256,24 +256,24 @@ async function sendMessage() {
         cur.messages.push({ 
             role: 'user', 
             text: displayMsg,
-            docContext: currentDocumentContext ? `[SYSTEM: The user has attached a document named '${currentDocumentName}'. Read the content below and refer to it to answer their query.]\n\n<DOCUMENT_CONTENT>\n${currentDocumentContext}\n</DOCUMENT_CONTENT>` : null
+            docContext: window.currentDocumentContext ? `[SYSTEM: The user has attached a document named '${window.currentDocumentName}'. Read the content below and refer to it to answer their query.]\n\n<DOCUMENT_CONTENT>\n${window.currentDocumentContext}\n</DOCUMENT_CONTENT>` : null
         });
         save();
     }
 
     // Clear the attachment UI safely
-    if (currentDocumentContext) {
-        currentDocumentContext = "";
-        currentDocumentName = "";
+    if (window.currentDocumentContext) {
+        window.currentDocumentContext = "";
+        window.currentDocumentName = "";
         const fileUploadEl = document.getElementById('file-upload');
         if(fileUploadEl) fileUploadEl.value = "";
         const chip = document.getElementById('attachment-chip');
         if(chip) {
             chip.classList.add('hidden');
-            chip.classList.remove('flex');
+            chip.classList.remove('fl`ex');
         }
     }
-
+``
     neuralSync.classList.remove('hidden');
     gpuStats.textContent = Math.floor(Math.random() * 40 + 30) + '%';
 
@@ -1230,9 +1230,20 @@ userInput.addEventListener('keydown', e => {
     }
 });
 // Keep send button in sync with input content
+// ═══════════════════════════════════════════════════
+//  DOCUMENT CONTEXT — handled by document.js
+//  updateSendBtn reads window.currentDocumentContext
+//  which document.js sets after extraction.
+// ═══════════════════════════════════════════════════
 function updateSendBtn() {
-    const empty = userInput.value.trim().length === 0;
-    sendBtn.disabled = empty || isProcessing;
+    const userInputEl = document.getElementById('user-input');
+    if (!userInputEl) return;
+    const empty = userInputEl.value.trim().length === 0;
+    const hasDoc = !!(window.currentDocumentContext);
+    const sendBtnEl = document.getElementById('send-btn');
+    if (sendBtnEl) {
+        sendBtnEl.disabled = (empty && !hasDoc) || isProcessing;
+    }
 }
 
 userInput.addEventListener('input', () => {
@@ -1281,70 +1292,6 @@ renameField.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeRenameModal();
 });
 renameModal.addEventListener('click', e => { if (e.target === renameModal) closeRenameModal(); });
-
-
-// ═══════════════════════════════════════════════════
-//  OFFLINE DOCUMENT READER (RAG)
-// ═══════════════════════════════════════════════════
-let currentDocumentContext = "";
-let currentDocumentName = "";
-
-const fileUpload = document.getElementById('file-upload');
-const attachBtn = document.getElementById('attach-btn');
-const attachmentChip = document.getElementById('attachment-chip');
-const attachmentName = document.getElementById('attachment-name');
-const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
-
-attachBtn.addEventListener('click', () => fileUpload.click());
-
-fileUpload.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 1024 * 1024) {
-        appendBotCard({
-            type: 'general', topic: 'File Too Large',
-            content: 'Please upload text files under 1MB to prevent Neural Link overload.',
-            risk_level: 'Low', prevention: 'N/A'
-        }, true);
-        fileUpload.value = "";
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        currentDocumentContext = event.target.result;
-        currentDocumentName = file.name;
-
-        attachmentName.textContent = currentDocumentName;
-        attachmentChip.classList.remove('hidden');
-        attachmentChip.classList.add('flex');
-        
-        updateSendBtn();
-        document.getElementById('user-input').focus();
-    };
-    reader.readAsText(file);
-});
-
-removeAttachmentBtn.addEventListener('click', () => {
-    currentDocumentContext = "";
-    currentDocumentName = "";
-    fileUpload.value = "";
-    attachmentChip.classList.add('hidden');
-    attachmentChip.classList.remove('flex');
-    updateSendBtn();
-});
-
-// OVERRIDE: Update send button to allow sending if a document is attached
-function updateSendBtn() {
-    const userInputEl = document.getElementById('user-input');
-    if (!userInputEl) return;
-    const empty = userInputEl.value.trim().length === 0;
-    const sendBtnEl = document.getElementById('send-btn');
-    if (sendBtnEl) {
-        sendBtnEl.disabled = (empty && !currentDocumentContext) || isProcessing;
-    }
-}
 
 // ─── BOOT ───
 // Send button starts disabled (empty input)
