@@ -237,13 +237,13 @@ async function sendMessage() {
     if (!msg && !window.currentDocumentContext) return;
 
     isProcessing = true;
+    if (typeof lockOldSystemTasks === 'function') lockOldSystemTasks(true);
     userInput.value = '';
     charCountEl.textContent = '0';
     charCountEl.classList.remove('warn');
 
     document.querySelector('.input-wrap').classList.add('locked');
     sendBtn.disabled = true;
-    micBtn.disabled  = true;
 
     // Show user bubble
     const displayMsg = msg || `[Attached Document: ${window.currentDocumentName}]`;
@@ -270,10 +270,10 @@ async function sendMessage() {
         const chip = document.getElementById('attachment-chip');
         if(chip) {
             chip.classList.add('hidden');
-            chip.classList.remove('fl`ex');
+            chip.classList.remove('flex');
         }
     }
-``
+
     neuralSync.classList.remove('hidden');
     gpuStats.textContent = Math.floor(Math.random() * 40 + 30) + '%';
 
@@ -339,7 +339,6 @@ async function sendMessage() {
         gpuStats.textContent = '2%';
         isProcessing = false;
         document.querySelector('.input-wrap').classList.remove('locked');
-        micBtn.disabled = false;
         updateSendBtn();
         setTimeout(() => userInput.focus(), 100);
     }
@@ -380,7 +379,7 @@ function appendBotCard(data, animate = false) {
 
     // ── Type correction: if code field is non-empty, always use coding renderer
     // This catches cases where the model returns type:"general" but has code.
-    if ((data.code || '').trim().length > 0 && data.type !== 'coding' && data.type !== 'email') {
+    if ((data.code || '').trim().length > 0 && data.type !== 'coding' && data.type !== 'email' && data.type !== 'system') {
         data = { ...data, type: 'coding' };
     }
     // If items array has entries and type wasn't set to security/coding/email, use list
@@ -414,6 +413,7 @@ function appendBotCard(data, animate = false) {
         case 'coding':   html = buildCoding(data, content);                 break;
         case 'list':     html = buildList(data, content) + legalBlock;      break;
         case 'email':    html = buildEmail(data, content) + legalBlock;     break;
+        case 'system':   html = buildSystemTask(data, content) + legalBlock; break;
         default:         html = buildGeneral(data, content) + legalBlock;   break;
     }
     if (portHtml) html += portHtml;
@@ -442,6 +442,7 @@ function appendBotCard(data, animate = false) {
     }
     scrollDown();
     if (data.type === 'email') lockOldEmailDrafts();
+    if (data.type === 'system') lockOldSystemTasks(false);
 }
 
 // ═══════════════════════════════════════════════════
@@ -972,7 +973,7 @@ function extractFields(raw) {
                 .replace(/\\t/g, '\t');
         }
     }
-    return { 
+return { 
         type: get('type') || 'general', 
         topic: get('topic') || 'NEURAL_STREAM', 
         content: get('content') || '', 
@@ -981,7 +982,10 @@ function extractFields(raw) {
         risk_level: get('risk_level') || 'None', 
         prevention: get('prevention') || 'N/A',
         recipient: get('recipient') || '',
-        subject: get('subject') || ''
+        subject: get('subject') || '',
+        action: get('action') || '',
+        path:   get('path')   || '',
+        dest:   get('dest')   || ''
     };
 }
 
@@ -1076,152 +1080,6 @@ function xRe(s) { return String(s||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 //  (no inline onclick on critical controls)
 // ═══════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════
-//  VOICE INPUT ENGINE  (Web Speech API)
-// ═══════════════════════════════════════════════════
-const micBtn       = document.getElementById('mic-btn');
-const voiceToast   = document.getElementById('voice-toast');
-const voiceToastTx = document.getElementById('voice-toast-text');
-
-// ═══════════════════════════════════════════════════
-//  VOICE ENGINE — Python speech_recognition backend
-//
-//  Connects via WebSocket to voice_server.py running
-//  on localhost:8765.  Python captures mic with the
-//  system microphone (no browser permission needed),
-//  recognises speech in phrases, and streams each
-//  recognised phrase back here word-by-word.
-//  100% offline after initial setup.
-// ═══════════════════════════════════════════════════
-
-let voiceSocket   = null;   // WebSocket to voice_server.py
-let isListeningV  = false;  // true while recording
-
-const vtDot  = document.getElementById('vt-dot');
-const vtBar  = document.getElementById('vt-bar');
-const vtWave = document.getElementById('vt-wave');
-
-function showVoiceToast(msg, mode = 'info') {
-    voiceToastTx.textContent = msg;
-    voiceToast.classList.add('show');
-    voiceToast.classList.remove('listening-mode','error-mode','downloading');
-    vtDot.classList.remove('blue');
-    vtWave.style.display = 'none';
-    if (mode === 'listening') {
-        voiceToast.classList.add('listening-mode');
-        vtWave.style.display = 'flex';
-    } else if (mode === 'error') {
-        voiceToast.classList.add('error-mode');
-    } else if (mode === 'download') {
-        voiceToast.classList.add('downloading');
-        vtDot.classList.add('blue');
-    } else {
-        vtDot.classList.add('blue');
-    }
-}
-function hideVoiceToast() {
-    voiceToast.classList.remove('show','listening-mode','error-mode','downloading');
-    vtWave.style.display = 'none';
-}
-
-function resetMicBtn() {
-    isListeningV = false;
-    micBtn.classList.remove('listening');
-    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-    micBtn.title = 'Voice Input (Python offline)';
-    micBtn.disabled = false;
-}
-
-function startVoice() {
-    if (voiceSocket && voiceSocket.readyState === WebSocket.OPEN) {
-        showVoiceToast('Already listening...', 'listening');
-        return;
-    }
-
-    try {
-        voiceSocket = new WebSocket('ws://localhost:8765');
-    } catch(e) {
-        showVoiceToast('Cannot connect to voice server. Is voice_server.py running?', 'error');
-        setTimeout(hideVoiceToast, 5000);
-        return;
-    }
-
-    voiceSocket.onopen = () => {
-        isListeningV = true;
-        micBtn.classList.add('listening');
-        micBtn.innerHTML = '<i class="fas fa-stop"></i>';
-        micBtn.title = 'Stop listening';
-        userInput.value = '';
-        charCountEl.textContent = '0';
-        updateSendBtn();
-        showVoiceToast('Listening... speak now', 'listening');
-        voiceSocket.send(JSON.stringify({ cmd: 'start' }));
-    };
-
-    voiceSocket.onmessage = (e) => {
-        try {
-            const msg = JSON.parse(e.data);
-
-            if (msg.type === 'partial') {
-                // Live interim — show in input field as it comes
-                userInput.value = msg.text;
-                charCountEl.textContent = msg.text.length;
-                updateSendBtn();
-                // Show in toast too so user sees it above the field
-                showVoiceToast(msg.text, 'listening');
-
-            } else if (msg.type === 'final') {
-                // Final phrase confirmed — append to any existing text
-                const existing = userInput.value.trim();
-                const phrase   = msg.text.trim();
-                userInput.value = existing ? existing + ' ' + phrase : phrase;
-                charCountEl.textContent = userInput.value.length;
-                updateSendBtn();
-                showVoiceToast(userInput.value, 'listening');
-
-            } else if (msg.type === 'done') {
-                // Recording ended — leave text in input field, user sends manually
-                resetMicBtn();
-                hideVoiceToast();
-                userInput.focus();
-
-            } else if (msg.type === 'error') {
-                showVoiceToast(msg.text || 'Voice error', 'error');
-                setTimeout(hideVoiceToast, 4000);
-                resetMicBtn();
-            }
-        } catch(_) {}
-    };
-
-    voiceSocket.onerror = () => {
-        showVoiceToast('voice_server.py not found on port 8765.\nRun: python voice_server.py', 'error');
-        setTimeout(hideVoiceToast, 6000);
-        resetMicBtn();
-    };
-
-    voiceSocket.onclose = () => {
-        if (isListeningV) {
-            resetMicBtn();
-            hideVoiceToast();
-            userInput.focus();
-        }
-    };
-}
-
-function stopVoice() {
-    if (voiceSocket && voiceSocket.readyState === WebSocket.OPEN) {
-        voiceSocket.send(JSON.stringify({ cmd: 'stop' }));
-        showVoiceToast('Processing...', 'info');
-    }
-    isListeningV = false;
-}
-
-micBtn.title = 'Voice Input (Python offline)';
-micBtn.addEventListener('click', () => {
-    if (isProcessing) return;
-    if (isListeningV) stopVoice();
-    else startVoice();
-});
 // ── Input field: Enter to send, char counter ──
 userInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {

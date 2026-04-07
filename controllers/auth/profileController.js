@@ -4,14 +4,15 @@
  */
 
 const User = require('../../models/User');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * @desc    Get user profile data
- * @route   GET /api/auth/profile
+ * @route   GET /api/auth/me
  */
 const getProfile = async (req, res) => {
     try {
-        // Find user by ID stored in session, exclude the vaultKey for security
         const user = await User.findById(req.session.userId).select('-vaultKey');
         
         if (!user) {
@@ -23,7 +24,8 @@ const getProfile = async (req, res) => {
             user: {
                 username: user.username,
                 email: user.email,
-                hasAppPassword: !!user.appPassword // Just send a boolean so the frontend knows if one is set
+                hasAppPassword: !!user.appPassword,
+                workspacePath: user.workspacePath || '' // Send the workspace path
             }
         });
     } catch (error) {
@@ -33,12 +35,12 @@ const getProfile = async (req, res) => {
 };
 
 /**
- * @desc    Update user profile (username, appPassword)
+ * @desc    Update user profile (username, appPassword, workspacePath)
  * @route   PUT /api/auth/profile
  */
 const updateProfile = async (req, res) => {
     try {
-        const { username, appPassword } = req.body;
+        const { username, appPassword, workspacePath } = req.body;
         const userId = req.session.userId;
 
         const user = await User.findById(userId);
@@ -46,14 +48,47 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
 
-        // Update fields if provided
+        // Update Username
         if (username && username.trim().length >= 3) {
             user.username = username.trim();
         }
 
-        // Allow appPassword to be updated. (If they send an empty string, we can clear it)
+        // Update App Password
         if (appPassword !== undefined) {
             user.appPassword = appPassword.trim() === '' ? null : appPassword.trim();
+        }
+
+        // Update Workspace Path
+        if (workspacePath !== undefined) {
+            const rawPath = workspacePath.trim();
+
+            if (rawPath === '') {
+                user.workspacePath = null;
+                user.currentDirectory = '';
+                req.session.cwd = undefined;
+            } else {
+                const resolvedPath = path.resolve(rawPath);
+
+                if (!path.isAbsolute(resolvedPath)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Workspace path must be an absolute directory path.'
+                    });
+                }
+
+                if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isDirectory()) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Workspace path does not exist or is not a folder.'
+                    });
+                }
+
+                const normalizedPath = resolvedPath.replace(/\\/g, '/');
+                user.workspacePath = normalizedPath;
+                user.currentDirectory = normalizedPath;
+                // Apply new workspace immediately for subsequent system actions.
+                req.session.cwd = normalizedPath;
+            }
         }
 
         await user.save();
@@ -64,13 +99,13 @@ const updateProfile = async (req, res) => {
             user: {
                 username: user.username,
                 email: user.email,
-                hasAppPassword: !!user.appPassword
+                hasAppPassword: !!user.appPassword,
+                workspacePath: user.workspacePath || ''
             }
         });
 
     } catch (error) {
         console.error('[PROFILE UPDATE ERROR]:', error);
-        // Handle MongoDB duplicate key error (e.g., username already taken)
         if (error.code === 11000) {
             return res.status(400).json({ success: false, message: 'Username is already taken.' });
         }

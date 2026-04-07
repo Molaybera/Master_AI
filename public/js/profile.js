@@ -6,9 +6,9 @@ const profileBtn = document.getElementById('profile-btn');
 const closeProfileBtn = document.getElementById('close-profile-btn');
 const cancelProfileBtn = document.getElementById('cancel-profile-btn');
 const saveProfileBtn = document.getElementById('save-profile-btn');
-
 const profileUsername = document.getElementById('profile-username');
 const profileAppPassword = document.getElementById('profile-app-password');
+const profileWorkspace = document.getElementById('profile-workspace');
 const profileStatus = document.getElementById('profile-status');
 
 async function openProfileModal() {
@@ -27,6 +27,7 @@ async function openProfileModal() {
             const data = await res.json();
             if (data.user) {
                 profileUsername.value = data.user.username || '';
+                profileWorkspace.value = data.user.workspacePath || '';
                 if (data.user.hasAppPassword) {
                     profileAppPassword.placeholder = "•••••••• (Saved)";
                 } else {
@@ -49,6 +50,7 @@ function closeProfileModal() {
 async function saveProfile() {
     const username = profileUsername.value.trim();
     const appPassword = profileAppPassword.value.trim();
+    const workspacePath = profileWorkspace.value.trim();
 
     saveProfileBtn.disabled = true;
     saveProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
@@ -61,7 +63,8 @@ async function saveProfile() {
             credentials: 'include',
             body: JSON.stringify({ 
                 username: username || undefined, 
-                appPassword: appPassword !== '' ? appPassword : undefined 
+                appPassword: appPassword !== '' ? appPassword : undefined,
+                workspacePath: workspacePath !== '' ? workspacePath : undefined
             })
         });
 
@@ -74,6 +77,10 @@ async function saveProfile() {
             // Update sidebar username display
             if (data.user && data.user.username) {
                 document.getElementById('user-display').textContent = data.user.username.toUpperCase();
+            }
+
+            if (typeof loadCwd === 'function') {
+                await loadCwd();
             }
 
             setTimeout(closeProfileModal, 1500);

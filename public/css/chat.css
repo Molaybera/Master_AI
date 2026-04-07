@@ -209,55 +209,7 @@
         }
         .char-count.warn{color:#f97316;}
 
-        /* ─── VOICE BUTTON ─────────────────────── */
-        .mic-btn{
-            margin:6px 0 6px 4px;
-            width:40px;height:40px;border-radius:11px;flex-shrink:0;
-            background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.18);
-            color:#64748b;font-size:13px;cursor:pointer;
-            display:flex;align-items:center;justify-content:center;
-            transition:all .2s;
-        }
-        .mic-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#38bdf8;}
-        .mic-btn.listening{
-            background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:#ef4444;
-            animation:micPulse .8s ease-in-out infinite;
-        }
-        .mic-btn.listening i{animation:none;}
-        @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
-
-        /* ─── VOICE TOAST ───────────────────────── */
-        #voice-toast{
-            position:fixed;bottom:110px;left:50%;transform:translateX(-50%);
-            background:rgba(8,15,30,.97);border:1px solid rgba(56,189,248,.25);
-            color:#e2e8f0;border-radius:14px;padding:12px 18px;
-            font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
-            letter-spacing:.06em;display:flex;flex-direction:column;gap:8px;min-width:280px;
-            box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:200;
-            opacity:0;pointer-events:none;transition:opacity .25s;
-        }
-        #voice-toast.show{opacity:1;}
-        #voice-toast.listening-mode{border-color:rgba(239,68,68,.4);}
-        #voice-toast.error-mode{border-color:rgba(239,68,68,.4);color:#fca5a5;}
-        #voice-toast .vt-row{display:flex;align-items:center;gap:10px;}
-        #voice-toast .vt-dot{
-            width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;
-            animation:micPulse .8s ease-in-out infinite;
-        }
-        #voice-toast .vt-dot.blue{background:#38bdf8;}
-        /* progress bar */
-        #voice-toast .vt-bar-wrap{
-            height:3px;border-radius:4px;background:rgba(56,189,248,.12);overflow:hidden;
-            display:none;
-        }
-        #voice-toast.downloading .vt-bar-wrap{display:block;}
-        #voice-toast .vt-bar{
-            height:100%;border-radius:4px;
-            background:linear-gradient(90deg,#38bdf8,#818cf8);
-            width:0%;transition:width .3s ease;
-        }
-        /* waveform animation while recording */
-        .mic-wave{display:flex;align-items:center;gap:2px;margin-left:4px;}
+        /* Voice UI removed */
         .mic-wave span{
             display:inline-block;width:3px;border-radius:2px;background:#ef4444;
             animation:wave 0.8s ease-in-out infinite;

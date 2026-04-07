@@ -28,9 +28,17 @@ const userSchema = new mongoose.Schema({
     },
     appPassword: {
         type: String,
-        default: null,
-     // It can be null until the user sets it up in their profile
+        default: null, // It can be null until the user sets it up in their profile
     },
+    workspacePath: {
+        type: String,
+        default: null
+    },
+    // In User model, add:
+    currentDirectory: { 
+        type: String,
+        default: ''
+        },
     createdAt: {
         type: Date,
         default: Date.now

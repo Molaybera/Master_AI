@@ -5,10 +5,8 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "concurrently --names \"SERVER,VOICE\" --prefix-colors \"cyan,magenta\" \"nodemon server.js\" \"python services/speachToText.py\"",
-    "start:server": "nodemon server.js",
-    "start:voice": "python services/speachToText.py",
-    "install:voice": "pip install speechrecognition websockets pyaudio"
+    "start": "nodemon server.js",
+    "start:server": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

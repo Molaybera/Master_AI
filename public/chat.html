@@ -115,8 +115,17 @@
 <!-- Input -->
     <footer class="px-4 md:px-12 pb-5 pt-2 flex-shrink-0"
             style="background:linear-gradient(to top, #020b18 60%, rgba(2,11,24,0.7) 100%)">
-        <div class="max-w-3xl mx-auto">
-            
+        
+            <div id="cwd-bar" class="hidden max-w-3xl mx-auto mb-2 px-3 py-2 rounded-lg border border-blue-500/20 bg-blue-900/10 flex items-center gap-2 flex-wrap">
+                <i class="fas fa-folder-open text-blue-400 text-[10px]"></i>
+                <span class="mono text-[9px] text-slate-500 uppercase tracking-wider">CWD:</span>
+                <span id="cwd-label" class="mono text-[11px] text-blue-300 truncate flex-1">workspace root</span>
+                <button onclick="resetToRoot()" class="ml-auto mono text-[9px] text-slate-500 hover:text-blue-400 border border-slate-700/50 hover:border-blue-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+                    <i class="fas fa-house text-[8px]"></i> ROOT
+                </button>
+            </div>
+
+            <div class="max-w-3xl mx-auto">    
             <!-- NEW: Attachment Chip (Hidden by default) -->
             <div id="attachment-chip" class="hidden items-center gap-2 mb-2 px-3 py-1.5 bg-blue-900/20 border border-blue-500/30 rounded-lg w-max max-w-full">
                 <i class="fas fa-file-alt text-blue-400 text-[10px]"></i>
@@ -141,9 +150,6 @@
                     style="padding-left: 40px;"> <!-- Padding adjusted for the new attach button -->
                 
                 <span class="char-count" id="char-count">0</span>
-                <button class="mic-btn" id="mic-btn" title="Voice Input">
-                    <i class="fas fa-microphone"></i>
-                </button>
                 <button class="send-btn" id="send-btn" title="Send (Enter)" disabled>
                     <i class="fas fa-paper-plane"></i>
                     <span class="send-label hidden sm:inline">Send</span>
@@ -154,18 +160,6 @@
             </p>
         </div>
     </footer>
-</div>
-
-<!-- ═══ VOICE TOAST ══════════════════════════════════════ -->
-<div id="voice-toast">
-    <div class="vt-row">
-        <span class="vt-dot" id="vt-dot"></span>
-        <span id="voice-toast-text">Initializing...</span>
-        <div class="mic-wave" id="vt-wave" style="display:none">
-            <span></span><span></span><span></span><span></span><span></span>
-        </div>
-    </div>
-    <div class="vt-bar-wrap"><div class="vt-bar" id="vt-bar"></div></div>
 </div>
 
 <!-- ═══ LOGOUT MODAL ════════════════════════════════════ -->
@@ -236,6 +230,12 @@
                 <input type="password" id="profile-app-password" class="modal-input" placeholder="Leave blank to keep current...">
                 <p class="text-[10px] text-slate-600 mt-1.5">Required for the AI to send emails on your behalf.</p>
             </div>
+
+            <div>
+                <label class="block mono text-[9px] text-slate-500 uppercase tracking-wider mb-1.5 mt-4">Workspace Directory</label>
+                <input type="text" id="profile-workspace" class="modal-input" placeholder="e.g., D:/Projects/Master_AI">
+                <p class="text-[10px] text-slate-600 mt-1.5">The sandbox folder where MASTER is allowed to create and read files.</p>
+            </div>
         </div>
 
         <div id="profile-status" class="mt-3 text-[11px] font-semibold hidden"></div>
@@ -256,5 +256,6 @@
 <script src="./js/chat.js" defer></script>
 <script src="./js/profile.js" defer></script>
 <script src="./js/document.js" defer></script>
+<script src="./js/systemManagement.js"></script>
 </body>
 </html>

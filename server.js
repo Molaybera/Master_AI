@@ -16,6 +16,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth/authRoutes');
 const viewRoutes = require('./routes/views/viewRoutes');
 const chatRoutes = require('./routes/chat/chatRoutes');
+const systemRoutes = require('./routes/system/systemRoutes');
 
 const app = express();
 
@@ -46,10 +47,10 @@ app.use(session({
     }
 }));
 
-
 // 4. Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/system', systemRoutes);
 app.use('/', viewRoutes);
 
 // 5. Static Files (Moved after session to ensure cookie visibility)
