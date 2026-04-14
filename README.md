@@ -1,42 +1,58 @@
 # Master AI
 
-**Master AI** is a locally-hosted, AI-powered assistant specializing in **Cybersecurity and Programming**. It runs entirely on your machine using [Ollama](https://ollama.com/) and a custom-trained model, giving you a private, offline-capable neural intelligence interface with built-in file management and email capabilities.
+> **An offline-first AI chat application** — run a full AI assistant on your own machine, no internet required, with a clean web interface and the ability to manage files, write code, and even send emails, all through natural conversation.
+
+---
+
+## Table of Contents
+
+1. [What Is This?](#what-is-this)
+2. [Features](#features)
+3. [Tech Stack](#tech-stack)
+4. [Prerequisites](#prerequisites)
+5. [Installation](#installation)
+6. [Usage](#usage)
+7. [Project Structure](#project-structure)
+8. [AI Model & Customization](#ai-model--customization)
+9. [API Reference](#api-reference)
+10. [Security Notes](#security-notes)
+11. [License](#license)
 
 ---
 
 ## What Is This?
 
-Master AI is an **offline AI chat application** — you download the model once, and from that point on it runs entirely on your own machine. No internet connection is required to chat with it, generate code, or manage your files. Your conversations and data never leave your computer.
+**Master AI** is a locally-hosted, offline AI chat application. You download the AI model once, and after that it runs completely on your own computer — no internet connection needed to chat, generate code, or manage your files. Your conversations and data never leave your machine.
 
-You interact with the AI through a clean **web-based chat interface** served locally. Everything happens through plain natural language — just type what you want and the model figures out what to do.
+You interact with it through a **web-based chat interface** served at `http://localhost:5000`. Everything is driven by plain natural language — just describe what you want and the model figures out what to do.
 
-### What can it do?
+### What Can It Do?
 
-| Capability | Needs Internet? | Example |
-|---|---|---|
-| **Answer questions** — cybersecurity, programming, general knowledge | ❌ No | *"Explain SQL injection"* |
-| **Generate code** — Python, JavaScript, Bash, and more | ❌ No | *"Write a port scanner in Python"* |
-| **Create files & folders** | ❌ No | *"Create a folder called MyProject"* |
-| **Read files & list directories** | ❌ No | *"Show me the contents of MyProject"* |
-| **Rename, move, copy, delete files** | ❌ No | *"Rename hello.py to main.py"* |
-| **Open files and folders** | ❌ No | *"Open hello.py"* |
-| **Run / execute files** | ❌ No | *"Run hello.py"* |
-| **Write and send emails (Gmail)** | ✅ Yes | *"Send an email to alice@example.com about the report"* |
+| Capability | Internet Required? | Example Command |
+|---|:---:|---|
+| Answer questions (cybersecurity, programming, general) | ❌ No | *"Explain what a buffer overflow is"* |
+| Generate code (Python, JavaScript, Bash, and more) | ❌ No | *"Write a port scanner in Python"* |
+| Create files and folders | ❌ No | *"Create a folder called MyProject"* |
+| Read files and list directories | ❌ No | *"Show me the contents of MyProject"* |
+| Rename, move, copy, or delete files | ❌ No | *"Rename hello.py to main.py"* |
+| Open files and folders | ❌ No | *"Open hello.py"* |
+| Run / execute files | ❌ No | *"Run hello.py"* |
+| Write and send emails (Gmail) | ✅ Yes | *"Send an email to alice@example.com about the report"* |
 
-All of these actions happen **directly inside the chat window** — you describe the task in plain English and the model executes it. No separate terminal commands, no clicking through menus.
+All actions happen **directly inside the chat window** — no separate terminal, no clicking through menus.
 
-> **Privacy note:** The AI model runs 100% locally via Ollama. The only time the application makes an outbound network request is when you explicitly ask it to send an email.
+> **Privacy:** The AI model runs 100% locally via Ollama. The only outbound network request the app ever makes is when you explicitly ask it to send an email.
 
 ---
 
 ## Features
 
-- **AI Chat Interface** — Conversational assistant powered by a local LLM (`qwen2.5-coder`) configured as the `Master` persona via Ollama.
+- **Offline AI Chat** — Conversational assistant powered by a local LLM (`qwen2.5-coder:7b`) running through Ollama under the custom `Master` persona.
 - **Cybersecurity & Programming Focus** — Designed to assist with security audits, code generation, vulnerability analysis, and technical programming questions.
-- **File System Agent** — Issue natural-language commands to create, read, rename, move, copy, delete, and run files and folders inside your personal workspace.
+- **File System Agent** — Create, read, rename, move, copy, delete, open, and run files and folders in your workspace using plain English.
 - **Mail Agent** — Compose and send emails through Gmail directly from the chat interface (requires a Google App Password).
-- **User Authentication** — Secure registration and login system using a username, email, and a unique **Vault Key** for offline-style authentication.
-- **Persistent Chat History** — All conversations are stored in MongoDB, linked to each user's account.
+- **User Authentication** — Secure registration and login using a username, email address, and a unique **Vault Key**.
+- **Persistent Chat History** — All conversations are stored in MongoDB and linked to each user's account.
 - **Session Management** — Server-side sessions stored in MongoDB with 24-hour expiry.
 
 ---
@@ -46,11 +62,11 @@ All of these actions happen **directly inside the chat window** — you describe
 | Layer | Technology |
 |---|---|
 | **Backend** | Node.js, Express.js v5 |
-| **Database** | MongoDB (local), Mongoose |
-| **AI Runtime** | [Ollama](https://ollama.com/) (local LLM) |
-| **AI Model** | `qwen2.5-coder:7b` (served as `Master`) |
+| **Database** | MongoDB (local instance), Mongoose |
+| **AI Runtime** | [Ollama](https://ollama.com/) — runs the LLM locally |
+| **AI Model** | `qwen2.5-coder:7b` (served as the `Master` persona) |
 | **File Agent** | Python 3 (`terminal_agent.py`) |
-| **Email** | Nodemailer (Gmail) |
+| **Email** | Nodemailer (Gmail SMTP) |
 | **Auth** | express-session, bcryptjs, connect-mongo |
 | **Frontend** | Vanilla HTML, CSS, JavaScript |
 
@@ -58,12 +74,14 @@ All of these actions happen **directly inside the chat window** — you describe
 
 ## Prerequisites
 
-Before running the project, make sure you have the following installed:
+Make sure the following are installed and running before you start:
 
-- [Node.js](https://nodejs.org/) (v18 or later)
-- [MongoDB](https://www.mongodb.com/try/download/community) (running locally)
-- [Ollama](https://ollama.com/) (running locally)
-- [Python 3](https://www.python.org/) (for the file system agent)
+| Requirement | Version | Notes |
+|---|---|---|
+| [Node.js](https://nodejs.org/) | v18 or later | |
+| [MongoDB](https://www.mongodb.com/try/download/community) | Any recent version | Must be running locally |
+| [Ollama](https://ollama.com/) | Latest | Must be running locally |
+| [Python 3](https://www.python.org/) | v3.8 or later | Used by the file system agent |
 
 ---
 
@@ -84,21 +102,21 @@ npm install
 
 ### 3. Set up the AI model
 
-Pull the base model and create the `Master` model with Ollama:
+Pull the base model, then build the custom `Master` persona with Ollama:
 
 ```bash
 ollama pull qwen2.5-coder:7b
 ollama create Master -f ./Modelfile
 ```
 
-Verify the model is running:
+Verify it is working:
 
 ```bash
-ollama list
-ollama run Master
+ollama list       # Master should appear in the list
+ollama run Master # Quick test — type a message and press Ctrl+D to exit
 ```
 
-> See the [AI Model & Customization](#ai-model--customization) section below for full details on the Modelfile, changing the model, and tuning parameters.
+> See the [AI Model & Customization](#ai-model--customization) section for details on the Modelfile, swapping the base model, and tuning inference parameters.
 
 ### 4. Configure environment variables
 
@@ -111,9 +129,11 @@ PORT=5000
 NODE_ENV=development
 ```
 
+> **Never commit `.env` to version control.** It is already listed in `.gitignore`.
+
 ### 5. Start MongoDB
 
-Make sure your local MongoDB instance is running (via MongoDB Compass or the `mongod` command).
+Make sure your local MongoDB instance is running. You can start it with `mongod` or use MongoDB Compass.
 
 ### 6. Start the server
 
@@ -121,25 +141,31 @@ Make sure your local MongoDB instance is running (via MongoDB Compass or the `mo
 npm start
 ```
 
-The application will be available at **http://localhost:5000**.
+The application will be available at **[http://localhost:5000](http://localhost:5000)**.
 
 ---
 
 ## Usage
 
-1. **Register** — Navigate to `/register` and create an account. A unique **Vault Key** will be generated for your account.
-2. **Login** — Sign in at `/login` with your credentials.
-3. **Chat** — Use the chat interface to talk to MASTER. You can ask cybersecurity questions, request code, and issue file/folder commands in plain English.
+### Getting Started
 
-### Example AI Commands
+1. **Register** — Go to `http://localhost:5000/register` and create an account. A unique **Vault Key** will be generated and shown to you — save it.
+2. **Log in** — Go to `http://localhost:5000/login` and sign in with your credentials.
+3. **Chat** — The chat interface is at `http://localhost:5000/chat`. Type naturally — the model understands both questions and action requests.
+
+### Example Commands
 
 | What you type | What happens |
 |---|---|
-| `Create a folder called MyProject` | Creates a folder in your workspace |
-| `Create a file hello.py with a hello world program` | Generates and saves a Python file |
-| `List all files in my workspace` | Shows your workspace contents |
-| `Delete the file old_script.py` | Removes the specified file |
-| `Send an email to alice@example.com about the security report` | Drafts and sends an email via your Gmail account |
+| `Explain XSS attacks` | Returns an explanation with risk level and prevention tips |
+| `Write a Python script that pings a host` | Generates and displays the code |
+| `Create a folder called MyProject` | Creates the folder in your workspace |
+| `Create a file hello.py with a hello world program` | Generates and saves the file |
+| `List all files in my workspace` | Shows your workspace directory contents |
+| `Open hello.py` | Opens the file |
+| `Rename hello.py to main.py` | Renames the file in your workspace |
+| `Delete old_script.py` | Removes the file permanently |
+| `Send an email to alice@example.com — subject: Report, body: Please find the report attached` | Drafts and sends the email via Gmail |
 
 ---
 
@@ -148,34 +174,35 @@ The application will be available at **http://localhost:5000**.
 ```
 Master_AI/
 ├── config/
-│   └── db.js                  # MongoDB connection
+│   └── db.js                    # MongoDB connection setup
 ├── controllers/
-│   ├── auth/                  # Register, login, logout, profile controllers
+│   ├── auth/                    # Register, login, logout, profile controllers
 │   └── modelService/
-│       ├── chatController.js  # AI chat logic
-│       ├── mailController.js  # Email dispatch via Nodemailer
-│       ├── systemController.js # File system command handler
-│       └── terminal_agent.py  # Python bridge for file operations
+│       ├── chatController.js    # AI chat request handler
+│       ├── mailController.js    # Email dispatch via Nodemailer
+│       ├── systemController.js  # File system command handler
+│       └── terminal_agent.py   # Python bridge for file operations
 ├── middleware/
-│   └── authMiddleware.js      # Session protection & redirect guards
+│   └── authMiddleware.js        # Session protection & redirect guards
 ├── models/
-│   ├── User.js                # User schema (username, email, vaultKey, etc.)
-│   └── Chat.js                # Chat history schema
-├── public/                    # Frontend (HTML, CSS, JS)
-│   ├── index.html
-│   ├── login.html
-│   ├── register.html
-│   └── chat.html
+│   ├── User.js                  # User schema (username, email, vaultKey, etc.)
+│   └── Chat.js                  # Chat history schema
+├── public/                      # Frontend assets (HTML, CSS, JS)
+│   ├── index.html               # Landing page
+│   ├── login.html               # Login page
+│   ├── register.html            # Registration page
+│   └── chat.html                # Main chat interface
 ├── routes/
-│   ├── auth/                  # Authentication routes
-│   ├── chat/                  # Chat API routes
-│   ├── system/                # File system agent routes
-│   └── views/                 # HTML page routes
+│   ├── auth/                    # Authentication routes
+│   ├── chat/                    # Chat API routes
+│   ├── system/                  # File system agent routes
+│   └── views/                   # HTML page serving routes
 ├── services/
-│   └── aiService.js           # Ollama API integration & system prompt
-├── .env                       # Environment variables (not committed)
+│   └── aiService.js             # Ollama API integration & system prompt
+├── .env                         # Environment variables (not committed)
+├── Modelfile                    # Ollama model definition for the Master persona
 ├── package.json
-└── server.js                  # Application entry point
+└── server.js                    # Application entry point
 ```
 
 ---
@@ -184,31 +211,27 @@ Master_AI/
 
 ### The Default Model — `qwen2.5-coder:7b`
 
-Master AI is built around **[qwen2.5-coder:7b](https://ollama.com/library/qwen2.5-coder)**, a code-focused open-weight LLM from Alibaba's Qwen team. It is served locally through **Ollama** under a custom persona named `Master`.
+Master AI uses **[qwen2.5-coder:7b](https://ollama.com/library/qwen2.5-coder)**, a code-focused open-weight LLM from the Qwen team. It runs locally through **Ollama** under a custom persona named `Master`.
 
-Why this model:
-- Excellent code generation across Python, JavaScript, Bash, and more
-- Strong instruction-following — critical for the JSON-only response format the system requires
-- Cybersecurity knowledge baked in from pre-training
-- Runs well on consumer hardware (8 GB VRAM or CPU)
+**Why this model:**
+- Strong code generation across Python, JavaScript, Bash, and more
+- Reliable instruction-following — important for the strict JSON output format the app requires
+- Solid cybersecurity and programming knowledge from pre-training
+- Runs on consumer hardware (8 GB VRAM or CPU-only mode)
 
-The model is invoked in `services/aiService.js` with the following inference parameters:
+**Inference parameters** (configured in `services/aiService.js`):
 
-| Parameter | Value | Effect |
+| Parameter | Value | What It Does |
 |---|---|---|
-| `num_ctx` | `4096` | Context window (tokens) — includes full chat history |
-| `num_predict` | `2048` | Maximum tokens per response |
-| `temperature` | `0.4` | Lower = more deterministic/focused answers |
-| `top_p` | `0.9` | Nucleus sampling threshold |
-| `repeat_penalty` | `1.1` | Discourages repetitive output |
+| `num_ctx` | `4096` | Context window size in tokens (includes full chat history) |
+| `num_predict` | `2048` | Maximum tokens the model can output per response |
+| `temperature` | `0.4` | Lower = more focused/deterministic; higher = more creative |
+| `top_p` | `0.9` | Nucleus sampling — filters low-probability tokens |
+| `repeat_penalty` | `1.1` | Discourages the model from repeating itself |
 
----
+### The Modelfile
 
-### The Modelfile — Custom Identity & Instructions
-
-A `Modelfile` is a plain-text recipe that Ollama uses to build a named model. It wraps a base model with a custom system prompt, temperature, and identity — similar to a "character card" for an LLM.
-
-Create a file named `Modelfile` in the project root with this content:
+The `Modelfile` is a plain-text recipe that Ollama uses to build the `Master` model. It wraps the base model with a system prompt, a persona, and default parameters.
 
 ```
 FROM qwen2.5-coder:7b
@@ -237,61 +260,45 @@ Type values:
 """
 ```
 
-Then build and register the model with Ollama:
+After editing the Modelfile, rebuild the model:
 
 ```bash
 ollama create Master -f ./Modelfile
 ```
 
-Every time you edit the Modelfile, re-run `ollama create Master -f ./Modelfile` to apply the changes.
+### Changing the Base Model
 
----
+You can swap `qwen2.5-coder:7b` for any Ollama-compatible model:
 
-### Changing the Model
-
-You can swap `qwen2.5-coder:7b` for any Ollama-compatible model. Recommended alternatives:
-
-| Model | Pull command | Notes |
+| Model | Pull Command | Notes |
 |---|---|---|
-| `qwen2.5-coder:14b` | `ollama pull qwen2.5-coder:14b` | More capable, needs ~16 GB VRAM |
-| `qwen2.5-coder:3b` | `ollama pull qwen2.5-coder:3b` | Faster, lower VRAM, slightly weaker |
+| `qwen2.5-coder:14b` | `ollama pull qwen2.5-coder:14b` | More capable; requires ~16 GB VRAM |
+| `qwen2.5-coder:3b` | `ollama pull qwen2.5-coder:3b` | Faster; lower VRAM; slightly less capable |
 | `llama3.1:8b` | `ollama pull llama3.1:8b` | General-purpose alternative |
 | `deepseek-coder-v2` | `ollama pull deepseek-coder-v2` | Strong coding alternative |
 | `mistral:7b` | `ollama pull mistral:7b` | Lightweight general model |
 
-**Step 1** — Update your `Modelfile` to point to the new base model:
+To switch models:
 
-```
-FROM llama3.1:8b   ← change this line
-```
+1. Update the `FROM` line in `Modelfile`:
+   ```
+   FROM llama3.1:8b
+   ```
+2. Rebuild:
+   ```bash
+   ollama create Master -f ./Modelfile
+   ```
+3. No code changes needed — the app always calls a model named `Master`.
 
-**Step 2** — Rebuild the `Master` model:
+### Tuning Inference Parameters
 
-```bash
-ollama create Master -f ./Modelfile
-```
-
-**Step 3** — No code changes needed. The app always calls the model named `Master`, so swapping the base model is transparent.
-
-> Alternatively, if you want to skip the Modelfile entirely and call a raw Ollama model directly, open `services/aiService.js` and change this line:
-> ```js
-> const MODEL_NAME = 'Master';
-> // change to:
-> const MODEL_NAME = 'qwen2.5-coder:7b';
-> ```
-> Note: without a Modelfile the system prompt is still injected at runtime by `aiService.js`, so behaviour should remain consistent.
-
----
-
-### Tuning Model Parameters
-
-To adjust inference behaviour without changing the Modelfile, edit the `options` block in `services/aiService.js`:
+To adjust parameters without touching the Modelfile, edit the `options` block in `services/aiService.js`:
 
 ```js
 options: {
     num_ctx:        4096,   // increase for longer conversations (uses more VRAM)
     num_predict:    2048,   // increase for longer code outputs
-    temperature:    0.4,    // 0.0 = fully deterministic, 1.0 = creative
+    temperature:    0.4,    // 0.0 = fully deterministic, 1.0 = most creative
     top_p:          0.9,
     repeat_penalty: 1.1,
 }
@@ -299,22 +306,20 @@ options: {
 
 Restart the server after changes: `npm start`
 
----
-
 ### Verifying Your Ollama Setup
 
 ```bash
-# Check Ollama is running
+# List available models (Master should appear here)
 ollama list
 
-# Test the Master model directly
+# Test the Master model directly in the terminal
 ollama run Master
 
-# Check Ollama API is reachable (used by aiService.js)
+# Confirm the Ollama API is reachable (used by aiService.js)
 curl http://127.0.0.1:11434/api/tags
 ```
 
-The app connects to Ollama at `http://127.0.0.1:11434` by default. If you are running Ollama on a different host or port, update this line in `services/aiService.js`:
+The app connects to Ollama at `http://127.0.0.1:11434` by default. To change the host or port, update this line in `services/aiService.js`:
 
 ```js
 const OLLAMA_URL = 'http://127.0.0.1:11434/api/chat';
@@ -322,25 +327,41 @@ const OLLAMA_URL = 'http://127.0.0.1:11434/api/chat';
 
 ---
 
+## API Reference
+
+### Authentication
+
 | Method | Route | Description |
 |---|---|---|
 | `POST` | `/api/auth/register` | Register a new user |
 | `POST` | `/api/auth/login` | Log in |
 | `POST` | `/api/auth/logout` | Log out |
-| `POST` | `/api/chat` | Send a message to the AI |
-| `POST` | `/api/system/execute` | Execute a file system command |
+
+### Chat
+
+| Method | Route | Description |
+|---|---|---|
+| `POST` | `/api/chat` | Send a message to the AI and receive a response |
+
+### File System Agent
+
+| Method | Route | Description |
+|---|---|---|
+| `POST` | `/api/system/execute` | Execute a file system command (create, rename, delete, etc.) |
 | `GET` | `/api/system/cwd` | Get the current working directory |
-| `POST` | `/api/system/reset-cwd` | Reset the working directory |
+| `POST` | `/api/system/reset-cwd` | Reset the working directory to the default workspace |
+
+> All routes except `/api/auth/register` and `/api/auth/login` require an active session.
 
 ---
 
 ## Security Notes
 
-- All routes that require authentication are protected by the `protect` middleware.
-- Passwords are hashed using **bcryptjs**.
+- All protected routes are guarded by the `protect` middleware which validates the session.
+- Passwords are hashed using **bcryptjs** before being stored.
 - Sessions are stored server-side in MongoDB and expire after **24 hours**.
-- The file system agent enforces workspace boundaries — users cannot traverse outside their assigned workspace path.
-- The `SESSION_SECRET` and database URI should always be set via environment variables and never hardcoded in production.
+- The file system agent enforces workspace boundaries — users cannot access paths outside their assigned workspace.
+- The `SESSION_SECRET` and `MONGO_URI` must always be set via environment variables and never hardcoded.
 
 ---
 
