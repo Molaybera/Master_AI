@@ -66,7 +66,14 @@ ollama pull qwen2.5-coder:7b
 ollama create Master -f ./Modelfile
 ```
 
-> If you don't have a `Modelfile`, you can run the model directly as `qwen2.5-coder` and update `MODEL_NAME` in `services/aiService.js` accordingly.
+Verify the model is running:
+
+```bash
+ollama list
+ollama run Master
+```
+
+> See the [AI Model & Customization](#ai-model--customization) section below for full details on the Modelfile, changing the model, and tuning parameters.
 
 ### 4. Configure environment variables
 
@@ -148,7 +155,147 @@ Master_AI/
 
 ---
 
-## API Endpoints
+## AI Model & Customization
+
+### The Default Model — `qwen2.5-coder:7b`
+
+Master AI is built around **[qwen2.5-coder:7b](https://ollama.com/library/qwen2.5-coder)**, a code-focused open-weight LLM from Alibaba's Qwen team. It is served locally through **Ollama** under a custom persona named `Master`.
+
+Why this model:
+- Excellent code generation across Python, JavaScript, Bash, and more
+- Strong instruction-following — critical for the JSON-only response format the system requires
+- Cybersecurity knowledge baked in from pre-training
+- Runs well on consumer hardware (8 GB VRAM or CPU)
+
+The model is invoked in `services/aiService.js` with the following inference parameters:
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `num_ctx` | `4096` | Context window (tokens) — includes full chat history |
+| `num_predict` | `2048` | Maximum tokens per response |
+| `temperature` | `0.4` | Lower = more deterministic/focused answers |
+| `top_p` | `0.9` | Nucleus sampling threshold |
+| `repeat_penalty` | `1.1` | Discourages repetitive output |
+
+---
+
+### The Modelfile — Custom Identity & Instructions
+
+A `Modelfile` is a plain-text recipe that Ollama uses to build a named model. It wraps a base model with a custom system prompt, temperature, and identity — similar to a "character card" for an LLM.
+
+Create a file named `Modelfile` in the project root with this content:
+
+```
+FROM qwen2.5-coder:7b
+
+PARAMETER temperature 0.4
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.1
+PARAMETER num_ctx 4096
+PARAMETER num_predict 2048
+
+SYSTEM """
+You are MASTER — a Neural Intelligence specialist in Cyber Security and Programming.
+
+CRITICAL: Your ENTIRE response must be ONE valid JSON object. No markdown. No explanation outside JSON. No code fences.
+
+Respond using only this schema:
+{"type":"...","topic":"...","content":"...","code":"","items":[],"risk_level":"None","prevention":"N/A","recipient":"","subject":"","action":"","path":"","dest":""}
+
+Type values:
+- "general"  — for explanations, questions, definitions
+- "coding"   — when returning code (populate "code" field)
+- "security" — for vulnerability/threat analysis (populate "risk_level" and "prevention")
+- "list"     — for numbered or bulleted breakdowns (populate "items" array)
+- "system"   — for file/folder operations (populate "action", "path", "dest")
+- "email"    — for email drafts (populate "recipient", "subject", "content")
+"""
+```
+
+Then build and register the model with Ollama:
+
+```bash
+ollama create Master -f ./Modelfile
+```
+
+Every time you edit the Modelfile, re-run `ollama create Master -f ./Modelfile` to apply the changes.
+
+---
+
+### Changing the Model
+
+You can swap `qwen2.5-coder:7b` for any Ollama-compatible model. Recommended alternatives:
+
+| Model | Pull command | Notes |
+|---|---|---|
+| `qwen2.5-coder:14b` | `ollama pull qwen2.5-coder:14b` | More capable, needs ~16 GB VRAM |
+| `qwen2.5-coder:3b` | `ollama pull qwen2.5-coder:3b` | Faster, lower VRAM, slightly weaker |
+| `llama3.1:8b` | `ollama pull llama3.1:8b` | General-purpose alternative |
+| `deepseek-coder-v2` | `ollama pull deepseek-coder-v2` | Strong coding alternative |
+| `mistral:7b` | `ollama pull mistral:7b` | Lightweight general model |
+
+**Step 1** — Update your `Modelfile` to point to the new base model:
+
+```
+FROM llama3.1:8b   ← change this line
+```
+
+**Step 2** — Rebuild the `Master` model:
+
+```bash
+ollama create Master -f ./Modelfile
+```
+
+**Step 3** — No code changes needed. The app always calls the model named `Master`, so swapping the base model is transparent.
+
+> Alternatively, if you want to skip the Modelfile entirely and call a raw Ollama model directly, open `services/aiService.js` and change this line:
+> ```js
+> const MODEL_NAME = 'Master';
+> // change to:
+> const MODEL_NAME = 'qwen2.5-coder:7b';
+> ```
+> Note: without a Modelfile the system prompt is still injected at runtime by `aiService.js`, so behaviour should remain consistent.
+
+---
+
+### Tuning Model Parameters
+
+To adjust inference behaviour without changing the Modelfile, edit the `options` block in `services/aiService.js`:
+
+```js
+options: {
+    num_ctx:        4096,   // increase for longer conversations (uses more VRAM)
+    num_predict:    2048,   // increase for longer code outputs
+    temperature:    0.4,    // 0.0 = fully deterministic, 1.0 = creative
+    top_p:          0.9,
+    repeat_penalty: 1.1,
+}
+```
+
+Restart the server after changes: `npm start`
+
+---
+
+### Verifying Your Ollama Setup
+
+```bash
+# Check Ollama is running
+ollama list
+
+# Test the Master model directly
+ollama run Master
+
+# Check Ollama API is reachable (used by aiService.js)
+curl http://127.0.0.1:11434/api/tags
+```
+
+The app connects to Ollama at `http://127.0.0.1:11434` by default. If you are running Ollama on a different host or port, update this line in `services/aiService.js`:
+
+```js
+const OLLAMA_URL = 'http://127.0.0.1:11434/api/chat';
+```
+
+---
 
 | Method | Route | Description |
 |---|---|---|
