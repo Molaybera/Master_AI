@@ -4,6 +4,31 @@
 
 ---
 
+## What Is This?
+
+Master AI is an **offline AI chat application** — you download the model once, and from that point on it runs entirely on your own machine. No internet connection is required to chat with it, generate code, or manage your files. Your conversations and data never leave your computer.
+
+You interact with the AI through a clean **web-based chat interface** served locally. Everything happens through plain natural language — just type what you want and the model figures out what to do.
+
+### What can it do?
+
+| Capability | Needs Internet? | Example |
+|---|---|---|
+| **Answer questions** — cybersecurity, programming, general knowledge | ❌ No | *"Explain SQL injection"* |
+| **Generate code** — Python, JavaScript, Bash, and more | ❌ No | *"Write a port scanner in Python"* |
+| **Create files & folders** | ❌ No | *"Create a folder called MyProject"* |
+| **Read files & list directories** | ❌ No | *"Show me the contents of MyProject"* |
+| **Rename, move, copy, delete files** | ❌ No | *"Rename hello.py to main.py"* |
+| **Open files and folders** | ❌ No | *"Open hello.py"* |
+| **Run / execute files** | ❌ No | *"Run hello.py"* |
+| **Write and send emails (Gmail)** | ✅ Yes | *"Send an email to alice@example.com about the report"* |
+
+All of these actions happen **directly inside the chat window** — you describe the task in plain English and the model executes it. No separate terminal commands, no clicking through menus.
+
+> **Privacy note:** The AI model runs 100% locally via Ollama. The only time the application makes an outbound network request is when you explicitly ask it to send an email.
+
+---
+
 ## Features
 
 - **AI Chat Interface** — Conversational assistant powered by a local LLM (`qwen2.5-coder`) configured as the `Master` persona via Ollama.
