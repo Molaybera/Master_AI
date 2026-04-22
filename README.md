@@ -1,6 +1,6 @@
 🧠 MASTER OS
 
-MASTER OS is a powerful, privacy-first, locally-hosted AI assistant and chat interface. Built on top of Node.js and Ollama, it provides an offline AI experience capable of managing local files, reading documents, and drafting emails—all from a sleek, cyber-security-themed web terminal.
+MASTER_AI is a powerful, privacy-first, locally-hosted AI assistant and chat interface. Built on top of Node.js and Ollama, it provides an offline AI experience capable of managing local files, reading documents, and drafting emails—all from a sleek, cyber-security-themed web terminal.
 
 ✨ Core Features
 
